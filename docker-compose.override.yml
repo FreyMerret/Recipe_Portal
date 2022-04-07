@@ -1,0 +1,32 @@
+version: '3.4'
+
+services:
+  recipeportal_sqlserver:
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=Passw0rd
+      - MSSQL_PID=Express
+    ports:
+      - "21433:1433"
+    networks:
+      - shared-recipeportal-net
+    volumes:      
+      - sqlserver-data:/var/opt/mssql
+
+  recipeportal_api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development1
+    ports:
+      - "21430:80"
+    networks:
+      - shared-recipeportal-net
+    env_file:
+      - env.api 
+
+volumes:
+  sqlserver-data:
+
+networks:
+  shared-recipeportal-net:
+    name: RecipePortal
+    driver: bridge

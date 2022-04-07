@@ -1,0 +1,13 @@
+version: '3.4'
+
+services:
+  recipeportal_sqlserver:
+    image: mcr.microsoft.com/mssql/server:2019-latest
+
+  recipeportal_api:
+    image: ${DOCKER_REGISTRY-}recipeportalapi
+    build:
+      context: .
+      dockerfile: System/RecipePortal.API/Dockerfile
+    depends_on:
+      - recipeportal_sqlserver

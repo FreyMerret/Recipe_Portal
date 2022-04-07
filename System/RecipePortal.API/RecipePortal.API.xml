@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>RecipePortal.API</name>
+    </assembly>
+    <members>
+        <member name="T:RecipePortal.API.Configuration.CorsConfiguration">
+            <summary>
+            CORS configuration
+            </summary>
+        </member>
+        <member name="M:RecipePortal.API.Configuration.CorsConfiguration.AddAppCors(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            Add CORS
+            </summary>
+            <param name="services">Services collection</param>
+        </member>
+        <member name="M:RecipePortal.API.Configuration.CorsConfiguration.UseAppCors(Microsoft.AspNetCore.Builder.WebApplication)">
+            <summary>
+            Use service
+            </summary>
+            <param name="app">Application</param>
+        </member>
+        <member name="T:RecipePortal.API.Configuration.HealthCheckConfiguration">
+            <summary>
+            Register services 
+            </summary>
+        </member>
+        <member name="M:RecipePortal.API.Configuration.HealthCheckConfiguration.AddAppHealthCheck(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            Register services
+            </summary>
+            <param name="services">Services collection</param>
+        </member>
+        <member name="M:RecipePortal.API.Configuration.HealthCheckConfiguration.UseAppHealthCheck(Microsoft.AspNetCore.Builder.WebApplication)">
+            <summary>
+            Use service
+            </summary>
+            <param name="app">Application</param>
+        </member>
+    </members>
+</doc>
