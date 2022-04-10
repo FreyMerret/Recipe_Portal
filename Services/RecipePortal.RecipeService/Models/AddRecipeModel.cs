@@ -12,18 +12,11 @@ public class AddRecipeModel
 
     public string LongDescription { get; set; }
 
-    //public virtual ICollection<Ingredient> Ingredients { get; set; }
+    public List<Ingredient> Ingredients { get; set; }
 
-    //public int? AuthorId { get; set; }
-
-    //public virtual User Author { get; set; }
+    public Guid AuthorId { get; set; }
 
     public int CategoryId { get; set; }
-
-    public virtual Category Category { get; set; }
-
-    //public double Rating { get; set; }
-    //public string Photos { get; set; }
 }
 
 public class AddRecipeModelValidator : AbstractValidator<AddRecipeModel>

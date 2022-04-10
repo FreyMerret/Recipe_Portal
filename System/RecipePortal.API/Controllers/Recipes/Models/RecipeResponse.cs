@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using RecipePortal.Db.Entities;
 using RecipePortal.RecipeService.Models;
 
 namespace RecipePortal.API.Controllers.Recipes.Models;
@@ -9,22 +8,35 @@ public class RecipeResponse
     //допилить
     public int Id { get; set; }
 
-    public string Title { get; set; } = string.Empty;
+    public string Title { get; set; }
 
-    public string ShortDescription { get; set; } = string.Empty;
+    public string ShortDescription { get; set; }
 
-    public string LongDescription { get; set; } = string.Empty;
+    public string LongDescription { get; set; }
+
+    public struct CompositionField
+    {
+        public int IngredientId { get; set; }
+        public string IngredientName { get; set; }
+        public string Quantity { get; set; }
+    }
+
+    public virtual List<CompositionField> Composition { get; set; }
+
+    public Guid AuthorId { get; set; }
+
+    public string Author { get; set; }
 
     public int CategoryId { get; set; }
 
-    public virtual Category Category { get; set; }
+    public string Category { get; set; }
 }
 public class RecipeResponseProfile : Profile
 {
     public RecipeResponseProfile()
     {
         CreateMap<RecipeModel, RecipeResponse>();
-            //.ForMember(d => d.ShortDescription, a => a.MapFrom(s => s.ShortDescription)); // from s to d
+            //.ForMember(d => d.Category, a => a.MapFrom(src => (src.Category ?? "oshibka2")));
     }
 }
 

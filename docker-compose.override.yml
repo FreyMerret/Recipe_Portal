@@ -10,12 +10,10 @@ services:
       - "21433:1433"
     networks:
       - shared-recipeportal-net
-    volumes:      
-      - sqlserver-data:/var/opt/mssql
+    #volumes:      
+      #- sqlserver-data:/var/opt/mssql
 
   recipeportal_api:
-    environment:
-      - ASPNETCORE_ENVIRONMENT=Development1
     ports:
       - "21430:80"
     networks:
@@ -23,8 +21,16 @@ services:
     env_file:
       - env.api 
 
-volumes:
-  sqlserver-data:
+  recipeportal_identity:
+    ports:
+      - "21431:80"
+    networks:
+      - shared-recipeportal-net
+    env_file:
+      - env.identity
+
+#volumes:
+  #sqlserver-data:
 
 networks:
   shared-recipeportal-net:

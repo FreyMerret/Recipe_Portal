@@ -20,7 +20,7 @@ public static class DbConfiguration
     {
         DbInit.Execute(app.Services);
 
-        //DbSeed.Execute(app.Services);
+        DbSeed.Execute(app.Services);
 
         return app;
     }

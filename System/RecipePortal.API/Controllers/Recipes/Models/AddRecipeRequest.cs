@@ -13,18 +13,9 @@ public class AddRecipeRequest
 
     public string LongDescription { get; set; }
 
-    //public virtual ICollection<Ingredient> Ingredients { get; set; }
+    public string Ingredients { get; set; } //выбирается в checkbox и формируется строка на фронте
 
-    //public int? AuthorId { get; set; }
-
-    //public virtual User Author { get; set; }
-
-    public int CategoryId { get; set; }
-
-    public virtual Category Category { get; set; }
-
-    //public double Rating { get; set; }
-    //public string Photos { get; set; }
+    public int CategoryId { get; set; }     //выбирается в radiobutton на фронте
 }
 
 public class AddRecipeResponseValidator : AbstractValidator<AddRecipeRequest>

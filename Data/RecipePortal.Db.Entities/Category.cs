@@ -5,5 +5,5 @@ public class Category : BaseEntity
 {
     public string Title;
 
-    public virtual ICollection<Recipe> Resipes { get; set; }
+    public virtual ICollection<Recipe>? Recipes { get; set; }
 }

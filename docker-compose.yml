@@ -11,3 +11,11 @@ services:
       dockerfile: System/RecipePortal.API/Dockerfile
     depends_on:
       - recipeportal_sqlserver
+  recipeportal_identity:
+    image: ${DOCKER_REGISTRY-}recipeportalidentity
+    build:
+      context: .
+      dockerfile: System/RecipePortal.Identity/Dockerfile
+    depends_on:
+      - recipeportal_sqlserver
+

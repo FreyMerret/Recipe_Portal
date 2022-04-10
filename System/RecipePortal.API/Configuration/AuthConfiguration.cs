@@ -1,28 +1,32 @@
 ﻿namespace RecipePortal.API.Configuration;
 
 using IdentityServer4.AccessTokenValidation;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using RecipePortal.Common.Security;
+using RecipePortal.Db.Context.Context;
+using RecipePortal.Db.Entities;
 using RecipePortal.Settings;
+using System.IdentityModel.Tokens.Jwt;
 
 public static class AuthConfiguration
 {
     public static IServiceCollection AddAppAuth(this IServiceCollection services, IApiSettings settings)
     {
-        //services
-        //    .AddIdentity<User, IdentityRole<Guid>>(opt =>
-        //    {
-        //        opt.Password.RequiredLength = 0;
-        //        opt.Password.RequireDigit = false;
-        //        opt.Password.RequireLowercase = false;
-        //        opt.Password.RequireUppercase = false;
-        //        opt.Password.RequireNonAlphanumeric = false;
-        //    })
-        //    .AddEntityFrameworkStores<MainDbContext>()
-        //    .AddUserManager<UserManager<User>>()
-        //    .AddDefaultTokenProviders();
+        services
+            .AddIdentity<User, IdentityRole<Guid>>(opt =>
+            {
+                opt.Password.RequiredLength = 0;
+                opt.Password.RequireDigit = false;
+                opt.Password.RequireLowercase = false;
+                opt.Password.RequireUppercase = false;
+                opt.Password.RequireNonAlphanumeric = false;
+            })
+            .AddEntityFrameworkStores<MainDbContext>()
+            .AddUserManager<UserManager<User>>()
+            .AddDefaultTokenProviders();
 
-        //JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
+        JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 
         services.AddAuthentication(options =>
         {
