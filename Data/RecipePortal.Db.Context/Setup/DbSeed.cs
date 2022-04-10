@@ -36,32 +36,28 @@ public static class DbSeed
         var ing1 = new Ingredient()
         {
             Name = "Куриное филе",
-            Composition = new List<Composition>() { },
-            CompositionIngredients = new List<CompositionIngredient>() { }
+            RecipeCompositionFields = new List<RecipeCompositionField>() { }
         };
         context.Ingredients.Add(ing1);
 
         var ing2 = new Ingredient()
         {
             Name = "Картофель",
-            Composition = new List<Composition>() { },
-            CompositionIngredients = new List<CompositionIngredient>() { }
+            RecipeCompositionFields = new List<RecipeCompositionField>() { }
         };
         context.Ingredients.Add(ing2);
 
         var ing3 = new Ingredient()
         {
             Name = "Рис",
-            Composition = new List<Composition>() { },
-            CompositionIngredients = new List<CompositionIngredient>() { }
+            RecipeCompositionFields = new List<RecipeCompositionField>() { }
         };
         context.Ingredients.Add(ing3);
 
         var ing4 = new Ingredient()
         {
             Name = "Лук",
-            Composition = new List<Composition>() { },
-            CompositionIngredients = new List<CompositionIngredient>() { }
+            RecipeCompositionFields = new List<RecipeCompositionField>() { }
         };
         context.Ingredients.Add(ing4);
         #endregion
@@ -83,16 +79,16 @@ public static class DbSeed
         var r1 = new Recipe()
         {
             Title = "Картошечка с курочкой",
-            ShortDescription = "Жареная картошка с куриным филе.",
-            LongDescription = "Картошка жареная в масле. Куриное филе, нарезанное ломтиками и обжаренное с душистым перцем.",
-            Composition = new List<Composition>()
+            Description = "Жареная картошка с куриным филе.",
+            Text = "Картошка жареная в масле. Куриное филе, нарезанное ломтиками и обжаренное с душистым перцем.",
+            RecipeCompositionFields = new List<RecipeCompositionField>()
             {
-                new Composition()
+                new RecipeCompositionField()
                 {
                     Ingredient = ing1,
                     Quantity = "500 грамм"
                 },
-                new Composition()
+                new RecipeCompositionField()
                 {
                     Ingredient = ing2,
                     Quantity = "1000 грамм"
@@ -107,26 +103,26 @@ public static class DbSeed
         var r2 = new Recipe()
         {
             Title = "Куриный суп",
-            ShortDescription = "Деревенский суп с курицей по рецепту бабули.",
-            LongDescription = "Обжариваем лук, добавляем курицу. Жарим 5 минут, добавляем воду, картофель, лук. Варим до готовности.",
-            Composition = new List<Composition>()
+            Description = "Деревенский суп с курицей по рецепту бабули.",
+            Text = "Обжариваем лук, добавляем курицу. Жарим 5 минут, добавляем воду, картофель, лук. Варим до готовности.",
+            RecipeCompositionFields = new List<RecipeCompositionField>()
             {
-                new Composition()
+                new RecipeCompositionField()
                 {
                     Ingredient = ing1,
                     Quantity = "500 грамм"
                 },
-                new Composition()
+                new RecipeCompositionField()
                 {
                     Ingredient = ing2,
                     Quantity = "500 грамм"
                 },
-                new Composition()
+                new RecipeCompositionField()
                 {
                     Ingredient = ing3,
                     Quantity = "200 грамм"
                 },
-                new Composition()
+                new RecipeCompositionField()
                 {
                     Ingredient = ing4,
                     Quantity = "2 штуки"

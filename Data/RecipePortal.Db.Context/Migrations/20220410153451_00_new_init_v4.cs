@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace RecipePortal.Db.Context.Migrations
 {
-    public partial class _00_new_init_v3 : Migration
+    public partial class _00_new_init_v4 : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -106,11 +106,11 @@ namespace RecipePortal.Db.Context.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Title = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    ShortDescription = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    LongDescription = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     AuthorId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     CategoryId = table.Column<int>(type: "int", nullable: false),
+                    Title = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Text = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Uid = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
@@ -244,57 +244,30 @@ namespace RecipePortal.Db.Context.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "composition",
+                name: "recipe_composition_fields",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    IngredientId = table.Column<int>(type: "int", nullable: false),
                     RecipeId = table.Column<int>(type: "int", nullable: true),
+                    IngredientId = table.Column<int>(type: "int", nullable: false),
                     Quantity = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Uid = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_composition", x => x.Id);
+                    table.PrimaryKey("PK_recipe_composition_fields", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_composition_ingredients_IngredientId",
+                        name: "FK_recipe_composition_fields_ingredients_IngredientId",
                         column: x => x.IngredientId,
                         principalTable: "ingredients",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_composition_recipes_RecipeId",
+                        name: "FK_recipe_composition_fields_recipes_RecipeId",
                         column: x => x.RecipeId,
                         principalTable: "recipes",
                         principalColumn: "Id");
-                });
-
-            migrationBuilder.CreateTable(
-                name: "CompositionIngredient",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    CompositionId = table.Column<int>(type: "int", nullable: false),
-                    IngredientId = table.Column<int>(type: "int", nullable: false),
-                    Uid = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_CompositionIngredient", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_CompositionIngredient_composition_CompositionId",
-                        column: x => x.CompositionId,
-                        principalTable: "composition",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_CompositionIngredient_ingredients_IngredientId",
-                        column: x => x.IngredientId,
-                        principalTable: "ingredients",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(
@@ -326,40 +299,24 @@ namespace RecipePortal.Db.Context.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_composition_IngredientId",
-                table: "composition",
+                name: "IX_ingredients_Uid",
+                table: "ingredients",
+                column: "Uid",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_recipe_composition_fields_IngredientId",
+                table: "recipe_composition_fields",
                 column: "IngredientId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_composition_RecipeId",
-                table: "composition",
+                name: "IX_recipe_composition_fields_RecipeId",
+                table: "recipe_composition_fields",
                 column: "RecipeId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_composition_Uid",
-                table: "composition",
-                column: "Uid",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_CompositionIngredient_CompositionId",
-                table: "CompositionIngredient",
-                column: "CompositionId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_CompositionIngredient_IngredientId",
-                table: "CompositionIngredient",
-                column: "IngredientId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_CompositionIngredient_Uid",
-                table: "CompositionIngredient",
-                column: "Uid",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_ingredients_Uid",
-                table: "ingredients",
+                name: "IX_recipe_composition_fields_Uid",
+                table: "recipe_composition_fields",
                 column: "Uid",
                 unique: true);
 
@@ -425,7 +382,7 @@ namespace RecipePortal.Db.Context.Migrations
                 name: "comments");
 
             migrationBuilder.DropTable(
-                name: "CompositionIngredient");
+                name: "recipe_composition_fields");
 
             migrationBuilder.DropTable(
                 name: "user_claims");
@@ -443,16 +400,13 @@ namespace RecipePortal.Db.Context.Migrations
                 name: "user_tokens");
 
             migrationBuilder.DropTable(
-                name: "composition");
-
-            migrationBuilder.DropTable(
-                name: "user_roles");
-
-            migrationBuilder.DropTable(
                 name: "ingredients");
 
             migrationBuilder.DropTable(
                 name: "recipes");
+
+            migrationBuilder.DropTable(
+                name: "user_roles");
 
             migrationBuilder.DropTable(
                 name: "categories");

@@ -33,10 +33,10 @@ internal class RecipeService : IRecipeService
     public async Task<IEnumerable<RecipeModel>> GetRecipes(int offset = 0, int limit = 10)
     {
         using var context = await contextFactory.CreateDbContextAsync();
-
+        
         var recipes = context
             .Recipes
-            .Include(x => x.Composition)   //подтягиваю данные из связанной таблицы для последующего мапинга
+            .Include(x => x.RecipeCompositionFields).ThenInclude(x => x.Ingredient)   //подтягиваю данные из связанной таблицы для последующего мапинга
             .Include(x => x.Category)
             .Include(x => x.Author)
             .AsQueryable();
@@ -49,31 +49,6 @@ internal class RecipeService : IRecipeService
 
         var data = (await recipes.ToListAsync()).Select(recipe => mapper.Map<RecipeModel>(recipe)).ToList();
 
-        //получили 
-
-        //var compositions = context
-        //    .Compositions
-        //    .Include(x => x.Ingredient)
-        //    .AsQueryable();
-
-        //foreach (var recipe in data)
-        //{
-        //    compositions = compositions
-        //        .Where(x => x.RecipeId.Equals(recipe.Id));
-
-        //    recipe.Composition = new List<CompositionField>();
-
-        //    foreach (var i in compositions)
-        //    {
-        //        recipe.Composition.Add(new CompositionField()
-        //        {
-        //            IngredientId = i.IngredientId,
-        //            IngredientName = i.Ingredient.Name,
-        //            Quantity = i.Quantity
-        //        });
-        //    };
-        //}
-        //var result = (IEnumerable<RecipeModel>)data;
         
         return data;
     }
@@ -83,32 +58,12 @@ internal class RecipeService : IRecipeService
         using var context = await contextFactory.CreateDbContextAsync();
 
         var recipe = await context.Recipes
-            .Include(x => x.Composition)   //подтягиваю данные из связанной таблицы для последующего мапинга
+            .Include(x => x.RecipeCompositionFields)   //подтягиваю данные из связанной таблицы для последующего мапинга
             .Include(x => x.Category)
             .Include(x => x.Author)
             .FirstOrDefaultAsync(x => x.Id.Equals(id));
 
         var data = mapper.Map<RecipeModel>(recipe);
-
-        var compositions = context
-            .Compositions
-            .Include(x => x.Ingredient)
-            .Where(x => x.RecipeId.Equals(id))
-            .AsQueryable();                
-
-        var comp = new List<CompositionField>();
-
-        foreach (var i in compositions)
-        {
-            comp.Add(new CompositionField()
-            {
-                IngredientId = i.IngredientId,
-                IngredientName = i.Ingredient.Name,
-                Quantity = i.Quantity
-            });
-        };
-
-        data.Composition = comp;
 
         return data;
     }

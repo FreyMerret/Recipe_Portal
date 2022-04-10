@@ -11,7 +11,7 @@ public class MainDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
     public DbSet<Comment> Comments { get; set; }
     public DbSet<Ingredient> Ingredients { get; set; }
     public DbSet<Recipe> Recipes { get; set; }
-    public DbSet<Composition> Compositions { get; set; }
+    public DbSet<RecipeCompositionField> RecipeCompositionFields { get; set; }
 
     public MainDbContext(DbContextOptions<MainDbContext> options) : base(options) { }
 
@@ -41,7 +41,7 @@ public class MainDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
         modelBuilder.Entity<Ingredient>().ToTable("ingredients");
         modelBuilder.Entity<Ingredient>().Property(x => x.Name).IsRequired();
         modelBuilder.Entity<Ingredient>().Property(x => x.Name).HasMaxLength(50);
-        modelBuilder.Entity<Ingredient>().HasMany(x => x.Composition).WithOne(x => x.Ingredient).HasForeignKey(x => x.IngredientId).OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<Ingredient>().HasMany(x => x.RecipeCompositionFields).WithOne(x => x.Ingredient).HasForeignKey(x => x.IngredientId).OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<Recipe>().ToTable("recipes");
         modelBuilder.Entity<Recipe>().Property(x => x.Title).IsRequired();
@@ -49,8 +49,8 @@ public class MainDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
         modelBuilder.Entity<Recipe>().HasOne(x => x.Category).WithMany(x => x.Recipes).HasForeignKey(x => x.CategoryId); //перекинуть в категории ради интереса
         modelBuilder.Entity<Recipe>().HasOne(x => x.Author).WithMany(x => x.Recipes).HasForeignKey(x => x.AuthorId);
 
-        modelBuilder.Entity<Composition>().ToTable("composition"); //состав
-        modelBuilder.Entity<Composition>().HasOne(x => x.Recipe).WithMany(x => x.Composition).HasForeignKey(x => x.RecipeId);
+        modelBuilder.Entity<RecipeCompositionField>().ToTable("recipe_composition_fields"); //состав
+        modelBuilder.Entity<RecipeCompositionField>().HasOne(x => x.Recipe).WithMany(x => x.RecipeCompositionFields).HasForeignKey(x => x.RecipeId);
 
 
         //modelBuilder.Entity<Comment>().HasOne(x => x.Author).WithOne(x => x.Detail).HasPrincipalKey<AuthorDetail>(x => x.Id);
