@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RecipePortal.Db.Context.Context;
 
@@ -11,9 +12,10 @@ using RecipePortal.Db.Context.Context;
 namespace RecipePortal.Db.Context.Migrations
 {
     [DbContext(typeof(MainDbContext))]
-    partial class MainDbContextModelSnapshot : ModelSnapshot
+    [Migration("20220415114315_02_recipe_composition_fields_has_been_renamed_to_composition_fields")]
+    partial class _02_recipe_composition_fields_has_been_renamed_to_composition_fields
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

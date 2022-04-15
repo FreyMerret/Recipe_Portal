@@ -11,7 +11,7 @@ public class MainDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
     public DbSet<Comment> Comments { get; set; }
     public DbSet<Ingredient> Ingredients { get; set; }
     public DbSet<Recipe> Recipes { get; set; }
-    public DbSet<RecipeCompositionField> RecipeCompositionFields { get; set; }
+    public DbSet<CompositionField> CompositionFields { get; set; }
 
     public MainDbContext(DbContextOptions<MainDbContext> options) : base(options) { }
 
@@ -35,22 +35,22 @@ public class MainDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
         modelBuilder.Entity<Comment>().ToTable("comments");
         modelBuilder.Entity<Comment>().Property(x => x.CommentText).IsRequired();
         modelBuilder.Entity<Comment>().Property(x => x.CommentText).HasMaxLength(500);
-        modelBuilder.Entity<Comment>().HasOne(x => x.Recipe).WithMany(x => x.Comments).HasForeignKey(x => x.RecipeId); //if we delete recipe, then we delete all it's comments
+        modelBuilder.Entity<Comment>().HasOne(x => x.Recipe).WithMany(x => x.Comments).HasForeignKey(x => x.RecipeId).OnDelete(DeleteBehavior.Cascade); //if we delete recipe, then we delete all it's comments
         modelBuilder.Entity<Comment>().HasOne(x => x.Author).WithMany(x => x.Comments).HasForeignKey(x => x.AuthorId).OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<Ingredient>().ToTable("ingredients");
         modelBuilder.Entity<Ingredient>().Property(x => x.Name).IsRequired();
         modelBuilder.Entity<Ingredient>().Property(x => x.Name).HasMaxLength(50);
-        modelBuilder.Entity<Ingredient>().HasMany(x => x.RecipeCompositionFields).WithOne(x => x.Ingredient).HasForeignKey(x => x.IngredientId).OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<Ingredient>().HasMany(x => x.RecipeCompositionFields).WithOne(x => x.Ingredient).HasForeignKey(x => x.IngredientId).OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<Recipe>().ToTable("recipes");
         modelBuilder.Entity<Recipe>().Property(x => x.Title).IsRequired();
         modelBuilder.Entity<Recipe>().Property(x => x.Title).HasMaxLength(100);
-        modelBuilder.Entity<Recipe>().HasOne(x => x.Category).WithMany(x => x.Recipes).HasForeignKey(x => x.CategoryId); //перекинуть в категории ради интереса
-        modelBuilder.Entity<Recipe>().HasOne(x => x.Author).WithMany(x => x.Recipes).HasForeignKey(x => x.AuthorId);
+        modelBuilder.Entity<Recipe>().HasOne(x => x.Category).WithMany(x => x.Recipes).HasForeignKey(x => x.CategoryId).OnDelete(DeleteBehavior.Cascade); //чтоб не ругался компилятор, категории удалять не собираюсь
+        modelBuilder.Entity<Recipe>().HasOne(x => x.Author).WithMany(x => x.Recipes).HasForeignKey(x => x.AuthorId).OnDelete(DeleteBehavior.Cascade);
 
-        modelBuilder.Entity<RecipeCompositionField>().ToTable("recipe_composition_fields"); //состав
-        modelBuilder.Entity<RecipeCompositionField>().HasOne(x => x.Recipe).WithMany(x => x.RecipeCompositionFields).HasForeignKey(x => x.RecipeId);
+        modelBuilder.Entity<CompositionField>().ToTable("composition_fields"); //состав
+        modelBuilder.Entity<CompositionField>().HasOne(x => x.Recipe).WithMany(x => x.CompositionFields).HasForeignKey(x => x.RecipeId).OnDelete(DeleteBehavior.Cascade);
 
 
         //modelBuilder.Entity<Comment>().HasOne(x => x.Author).WithOne(x => x.Detail).HasPrincipalKey<AuthorDetail>(x => x.Id);

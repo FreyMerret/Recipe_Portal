@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RecipePortal.Db.Context.Context;
 
@@ -11,9 +12,10 @@ using RecipePortal.Db.Context.Context;
 namespace RecipePortal.Db.Context.Migrations
 {
     [DbContext(typeof(MainDbContext))]
-    partial class MainDbContextModelSnapshot : ModelSnapshot
+    [Migration("20220414075327_01_new_rules_OnDelete_in_tables")]
+    partial class _01_new_rules_OnDelete_in_tables
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -214,39 +216,6 @@ namespace RecipePortal.Db.Context.Migrations
                     b.ToTable("comments", (string)null);
                 });
 
-            modelBuilder.Entity("RecipePortal.Db.Entities.CompositionField", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
-
-                    b.Property<int>("IngredientId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Quantity")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("RecipeId")
-                        .HasColumnType("int");
-
-                    b.Property<Guid>("Uid")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("IngredientId");
-
-                    b.HasIndex("RecipeId");
-
-                    b.HasIndex("Uid")
-                        .IsUnique();
-
-                    b.ToTable("composition_fields", (string)null);
-                });
-
             modelBuilder.Entity("RecipePortal.Db.Entities.Ingredient", b =>
                 {
                     b.Property<int>("Id")
@@ -311,6 +280,39 @@ namespace RecipePortal.Db.Context.Migrations
                         .IsUnique();
 
                     b.ToTable("recipes", (string)null);
+                });
+
+            modelBuilder.Entity("RecipePortal.Db.Entities.RecipeCompositionField", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<int>("IngredientId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Quantity")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("RecipeId")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("Uid")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IngredientId");
+
+                    b.HasIndex("RecipeId");
+
+                    b.HasIndex("Uid")
+                        .IsUnique();
+
+                    b.ToTable("recipe_composition_fields", (string)null);
                 });
 
             modelBuilder.Entity("RecipePortal.Db.Entities.User", b =>
@@ -460,25 +462,6 @@ namespace RecipePortal.Db.Context.Migrations
                     b.Navigation("Recipe");
                 });
 
-            modelBuilder.Entity("RecipePortal.Db.Entities.CompositionField", b =>
-                {
-                    b.HasOne("RecipePortal.Db.Entities.Ingredient", "Ingredient")
-                        .WithMany("RecipeCompositionFields")
-                        .HasForeignKey("IngredientId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("RecipePortal.Db.Entities.Recipe", "Recipe")
-                        .WithMany("CompositionFields")
-                        .HasForeignKey("RecipeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Ingredient");
-
-                    b.Navigation("Recipe");
-                });
-
             modelBuilder.Entity("RecipePortal.Db.Entities.Recipe", b =>
                 {
                     b.HasOne("RecipePortal.Db.Entities.User", "Author")
@@ -498,6 +481,25 @@ namespace RecipePortal.Db.Context.Migrations
                     b.Navigation("Category");
                 });
 
+            modelBuilder.Entity("RecipePortal.Db.Entities.RecipeCompositionField", b =>
+                {
+                    b.HasOne("RecipePortal.Db.Entities.Ingredient", "Ingredient")
+                        .WithMany("RecipeCompositionFields")
+                        .HasForeignKey("IngredientId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("RecipePortal.Db.Entities.Recipe", "Recipe")
+                        .WithMany("RecipeCompositionFields")
+                        .HasForeignKey("RecipeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Ingredient");
+
+                    b.Navigation("Recipe");
+                });
+
             modelBuilder.Entity("RecipePortal.Db.Entities.Category", b =>
                 {
                     b.Navigation("Recipes");
@@ -512,7 +514,7 @@ namespace RecipePortal.Db.Context.Migrations
                 {
                     b.Navigation("Comments");
 
-                    b.Navigation("CompositionFields");
+                    b.Navigation("RecipeCompositionFields");
                 });
 
             modelBuilder.Entity("RecipePortal.Db.Entities.User", b =>

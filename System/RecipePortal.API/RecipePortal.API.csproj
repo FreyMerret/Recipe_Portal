@@ -42,7 +42,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Controllers\Comments\" />
+    <Folder Include="logs\" />
   </ItemGroup>
 
 </Project>

@@ -3,13 +3,6 @@ using RecipePortal.RecipeService.Models;
 
 namespace RecipePortal.API.Controllers.Recipes.Models;
 
-public class RecipeCompositionFieldResponse
-{
-    public int IngredientId { get; set; }
-    public string IngredientName { get; set; }
-    public string Quantity { get; set; }
-}
-
 public class RecipeResponse
 {
     public int Id { get; set; }
@@ -26,15 +19,14 @@ public class RecipeResponse
 
     public string Text { get; set; }
 
-    public virtual List<RecipeCompositionFieldResponse> RecipeCompositionFields { get; set; }
+    //поля состава рецепта
+    public virtual List<CompositionFieldResponse> CompositionFields { get; set; }
 }
 public class RecipeResponseProfile : Profile
 {
     public RecipeResponseProfile()
     {
         CreateMap<RecipeModel, RecipeResponse>();
-
-        CreateMap<RecipeCompositionFieldModel, RecipeCompositionFieldResponse>();
     }
 }
 

@@ -14,7 +14,7 @@ public class Recipe : BaseEntity
 
     public string Text { get; set; }
 
-    public virtual ICollection<RecipeCompositionField> RecipeCompositionFields { get; set; }  //список ингридиентов и их количество
+    public virtual ICollection<CompositionField> CompositionFields { get; set; }  //список ингридиентов и их количество
 
     public virtual ICollection<Comment>? Comments { get; set; }
 }

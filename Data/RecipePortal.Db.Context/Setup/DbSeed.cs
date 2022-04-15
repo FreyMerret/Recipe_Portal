@@ -36,28 +36,28 @@ public static class DbSeed
         var ing1 = new Ingredient()
         {
             Name = "Куриное филе",
-            RecipeCompositionFields = new List<RecipeCompositionField>() { }
+            RecipeCompositionFields = new List<CompositionField>() { }
         };
         context.Ingredients.Add(ing1);
 
         var ing2 = new Ingredient()
         {
             Name = "Картофель",
-            RecipeCompositionFields = new List<RecipeCompositionField>() { }
+            RecipeCompositionFields = new List<CompositionField>() { }
         };
         context.Ingredients.Add(ing2);
 
         var ing3 = new Ingredient()
         {
             Name = "Рис",
-            RecipeCompositionFields = new List<RecipeCompositionField>() { }
+            RecipeCompositionFields = new List<CompositionField>() { }
         };
         context.Ingredients.Add(ing3);
 
         var ing4 = new Ingredient()
         {
             Name = "Лук",
-            RecipeCompositionFields = new List<RecipeCompositionField>() { }
+            RecipeCompositionFields = new List<CompositionField>() { }
         };
         context.Ingredients.Add(ing4);
         #endregion
@@ -81,14 +81,14 @@ public static class DbSeed
             Title = "Картошечка с курочкой",
             Description = "Жареная картошка с куриным филе.",
             Text = "Картошка жареная в масле. Куриное филе, нарезанное ломтиками и обжаренное с душистым перцем.",
-            RecipeCompositionFields = new List<RecipeCompositionField>()
+            CompositionFields = new List<CompositionField>()
             {
-                new RecipeCompositionField()
+                new CompositionField()
                 {
                     Ingredient = ing1,
                     Quantity = "500 грамм"
                 },
-                new RecipeCompositionField()
+                new CompositionField()
                 {
                     Ingredient = ing2,
                     Quantity = "1000 грамм"
@@ -105,24 +105,24 @@ public static class DbSeed
             Title = "Куриный суп",
             Description = "Деревенский суп с курицей по рецепту бабули.",
             Text = "Обжариваем лук, добавляем курицу. Жарим 5 минут, добавляем воду, картофель, лук. Варим до готовности.",
-            RecipeCompositionFields = new List<RecipeCompositionField>()
+            CompositionFields = new List<CompositionField>()
             {
-                new RecipeCompositionField()
+                new CompositionField()
                 {
                     Ingredient = ing1,
                     Quantity = "500 грамм"
                 },
-                new RecipeCompositionField()
+                new CompositionField()
                 {
                     Ingredient = ing2,
                     Quantity = "500 грамм"
                 },
-                new RecipeCompositionField()
+                new CompositionField()
                 {
                     Ingredient = ing3,
                     Quantity = "200 грамм"
                 },
-                new RecipeCompositionField()
+                new CompositionField()
                 {
                     Ingredient = ing4,
                     Quantity = "2 штуки"

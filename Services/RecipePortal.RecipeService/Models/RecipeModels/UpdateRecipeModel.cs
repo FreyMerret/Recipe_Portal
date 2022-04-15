@@ -3,26 +3,16 @@ using FluentValidation;
 using RecipePortal.Db.Entities;
 
 namespace RecipePortal.RecipeService.Models;
+
 public class UpdateRecipeModel
 {
+    public int CategoryId { get; set; }
+
     public string Title { get; set; }
 
-    public string ShortDescription { get; set; }
+    public string Description { get; set; }
 
-    //public string LongDescription { get; set; }
-
-    //public virtual ICollection<Ingredient> Ingredients { get; set; }
-
-    //public int? AuthorId { get; set; }
-
-    //public virtual User Author { get; set; }
-
-    //public int CategoryId { get; set; }
-
-    //public virtual Category Category { get; set; }
-
-    //public double Rating { get; set; }
-    //public string Photos { get; set; }
+    public string Text { get; set; }
 }
 
 public class UpdateRecipeModelValidator : AbstractValidator<UpdateRecipeModel>
@@ -33,7 +23,7 @@ public class UpdateRecipeModelValidator : AbstractValidator<UpdateRecipeModel>
             .NotEmpty().WithMessage("Title is required")
             .MaximumLength(50).WithMessage("Too long title");
 
-        RuleFor(x => x.ShortDescription).MaximumLength(200).WithMessage("Too long description");
+        RuleFor(x => x.Description).MaximumLength(200).WithMessage("Too long description");
     }
 }
 

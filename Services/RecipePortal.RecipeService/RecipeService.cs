@@ -5,7 +5,6 @@ using RecipePortal.Common.Validator;
 using RecipePortal.Db.Context.Context;
 using RecipePortal.Db.Entities;
 using RecipePortal.RecipeService.Models;
-using static RecipePortal.RecipeService.Models.RecipeModel;
 
 namespace RecipePortal.RecipeService;
 
@@ -15,53 +14,75 @@ internal class RecipeService : IRecipeService
     private readonly IMapper mapper;
     private readonly IModelValidator<AddRecipeModel> addRecipeModelValidator;
     private readonly IModelValidator<UpdateRecipeModel> updateRecipeModelValidator;
+    private readonly IModelValidator<AddCommentModel> addCommentModelValidator;
+    private readonly IModelValidator<UpdateCommentModel> updateCommentModelValidator;
+    private readonly IModelValidator<AddCompositionFieldModel> addCompositionFieldModelValidator;
+    private readonly IModelValidator<UpdateCompositionFieldModel> updateCompositionFieldModelValidator;
 
     public RecipeService(
         IDbContextFactory<MainDbContext> contextFactory,
         IMapper mapper,
         IModelValidator<AddRecipeModel> addRecipeModelValidator,
-        IModelValidator<UpdateRecipeModel> updateRecipeModelValidator)
+        IModelValidator<UpdateRecipeModel> updateRecipeModelValidator,
+        IModelValidator<AddCommentModel> addCommentModelValidator,
+        IModelValidator<UpdateCommentModel> updateCommentModelValidator,
+        IModelValidator<AddCompositionFieldModel> addCompositionFieldModelValidator,
+        IModelValidator<UpdateCompositionFieldModel> updateCompositionFieldModelValidator)
     {
         this.contextFactory = contextFactory;
         this.mapper = mapper;
         this.addRecipeModelValidator = addRecipeModelValidator;
         this.updateRecipeModelValidator = updateRecipeModelValidator;
+        this.addCommentModelValidator = addCommentModelValidator;
+        this.updateCommentModelValidator = updateCommentModelValidator;
+        this.addCompositionFieldModelValidator = addCompositionFieldModelValidator;
+        this.updateCompositionFieldModelValidator = updateCompositionFieldModelValidator;
     }
 
     //-------------------------------------------------------------------------------------------------------------
 
-    public async Task<IEnumerable<RecipeModel>> GetRecipes(int offset = 0, int limit = 10)
+    #region Recipes
+
+    public async Task<IEnumerable<RecipeModel>> GetRecipes(string recipeName = "", int categoryId = 0, string authorNickname = "", int offset = 0, int limit = 10)
     {
         using var context = await contextFactory.CreateDbContextAsync();
-        
+
         var recipes = context
             .Recipes
-            .Include(x => x.RecipeCompositionFields).ThenInclude(x => x.Ingredient)   //подтягиваю данные из связанной таблицы для последующего мапинга
+            .Include(x => x.CompositionFields).ThenInclude(x => x.Ingredient)   //подтягиваю данные из связанной таблицы для последующего мапинга
             .Include(x => x.Category)
             .Include(x => x.Author)
             .AsQueryable();
 
+        if (categoryId > 0)
+            recipes = recipes.Where(x => x.CategoryId.Equals(categoryId));
 
 
-        recipes = recipes //.where()
+        if (recipeName != "")
+            recipes = recipes.Where(x => x.Title.Contains(recipeName));
+
+        if (authorNickname != "")
+            recipes = recipes.Where(x => x.Author.UserName.Equals(authorNickname));
+
+        recipes = recipes
             .Skip(Math.Max(offset, 0))
             .Take(Math.Min(limit, 100));
 
         var data = (await recipes.ToListAsync()).Select(recipe => mapper.Map<RecipeModel>(recipe)).ToList();
 
-        
         return data;
     }
 
-    public async Task<RecipeModel> GetRecipe(int id)
+    public async Task<RecipeModel> GetRecipe(int recipeId)
     {
         using var context = await contextFactory.CreateDbContextAsync();
 
         var recipe = await context.Recipes
-            .Include(x => x.RecipeCompositionFields)   //подтягиваю данные из связанной таблицы для последующего мапинга
+            .Include(x => x.CompositionFields).ThenInclude(x => x.Ingredient)   //подтягиваю данные из связанной таблицы для последующего мапинга
             .Include(x => x.Category)
             .Include(x => x.Author)
-            .FirstOrDefaultAsync(x => x.Id.Equals(id));
+            .FirstOrDefaultAsync(x => x.Id.Equals(recipeId))
+            ?? throw new ProcessException($"The recipe (id: {recipeId}) was not found");
 
         var data = mapper.Map<RecipeModel>(recipe);
 
@@ -70,57 +91,172 @@ internal class RecipeService : IRecipeService
 
     public async Task<RecipeModel> AddRecipe(AddRecipeModel model)
     {
-        // addRecipeModelValidator.Check(model); -----сделать
-        // заменить == на Equal
+        addRecipeModelValidator.Check(model);
 
         using var context = await contextFactory.CreateDbContextAsync();
 
         var recipe = mapper.Map<Recipe>(model);
 
-        ////выбираем все ингридиенты из строки и находим их в бд, формируем коллекцию и приставем ее рецепту
-        //ICollection<Ingredient> ingredients = new List<Ingredient>();
-        //string[] input_ingredients = model.Ingredients.Split(",");
-        //foreach (string ingredient in input_ingredients)
-        //    ingredients.Add(await context.Ingredients.FirstOrDefaultAsync(i => i.Name == ingredient));
-        //recipe.Ingredients = ingredients;
-
-        ////находим автора в бд и пристваиаем его рецепту, затем присваем рецепту guid автора
-        //recipe.Author = await context.Users.FirstOrDefaultAsync(i => i.UserName == model.Author);
-        ////recipe.AuthorId = recipe.Author.Id;
-
-        ////находим категорию в бд и присваиваем ее рецепту
-        //recipe.Category = await context.Categories.FirstOrDefaultAsync(i => i.Id == model.CategoryId);
-
         await context.Recipes.AddAsync(recipe);
         context.SaveChanges();
 
-        return mapper.Map<RecipeModel>(recipe);
+
+        var response = mapper.Map<RecipeModel>(await GetRecipe(recipe.Id));
+
+        return response;
     }
 
-    public async Task UpdateRecipe(int id, UpdateRecipeModel model)
+    public async Task<RecipeModel> UpdateRecipe(int recipeId, UpdateRecipeModel model)
     {
         updateRecipeModelValidator.Check(model);
 
 
         using var context = await contextFactory.CreateDbContextAsync();
 
-        var recipe = await context.Recipes.FirstOrDefaultAsync(x => x.Id.Equals(id))
-            ?? throw new ProcessException($"The recipe (id: {id}) was not found");
+        var recipe = await context.Recipes.FirstOrDefaultAsync(x => x.Id.Equals(recipeId))
+            ?? throw new ProcessException($"The recipe (id: {recipeId}) was not found");
 
         recipe = mapper.Map(model, recipe);
 
         context.Recipes.Update(recipe);
         context.SaveChanges();
+
+        var response = mapper.Map<RecipeModel>(await GetRecipe(recipeId));
+
+        return response;
     }
 
-    public async Task DeleteRecipe(int id)
+    public async Task DeleteRecipe(int recipeId)
     {
         using var context = await contextFactory.CreateDbContextAsync();
 
-        var recipe = await context.Recipes.FirstOrDefaultAsync(x => x.Id.Equals(id))
-            ?? throw new ProcessException($"The recipe (id: {id}) was not found");
+        var recipe = await context.Recipes.FirstOrDefaultAsync(x => x.Id.Equals(recipeId))
+            ?? throw new ProcessException($"The recipe (id: {recipeId}) was not found");
 
         context.Remove(recipe);
         context.SaveChanges();
     }
+
+    #endregion
+
+
+    #region Comments
+
+    public async Task<IEnumerable<CommentModel>> GetComments(int recipeId, int offset = 0, int limit = 10)
+    {
+        using var context = await contextFactory.CreateDbContextAsync();
+        var recipe = await context.Recipes.FirstOrDefaultAsync(x => x.Id.Equals(recipeId))
+            ?? throw new ProcessException($"The recipe (id: {recipeId}) was not found");
+
+        var comments = context
+            .Comments
+            .Include(x => x.Author)
+            .AsQueryable();
+
+        comments = comments
+            .Where(s => s.RecipeId.Equals(recipeId))
+            .Skip(Math.Max(offset, 0))
+            .Take(Math.Min(limit, 100));
+
+        var data = (await comments.ToListAsync()).Select(comment => mapper.Map<CommentModel>(comment)).ToList();
+
+        return data;
+    }
+
+    public async Task<CommentModel> AddComment(int recipeId, AddCommentModel model)
+    {
+        using var context = await contextFactory.CreateDbContextAsync();
+        model.RecipeId = recipeId;
+        addCommentModelValidator.Check(model);
+
+        var comment = mapper.Map<Comment>(model);
+
+        await context.Comments.AddAsync(comment);
+        context.SaveChanges();
+
+        var response = mapper.Map<CommentModel>(await context.Comments.Include(x => x.Author).FirstOrDefaultAsync(x => x.Id.Equals(comment.Id)));
+
+        return response;
+    }
+
+    public async Task<CommentModel> UpdateComment(int commentId, UpdateCommentModel model)
+    {
+        updateCommentModelValidator.Check(model);
+
+
+        using var context = await contextFactory.CreateDbContextAsync();
+
+        var comment = await context.Comments.Include(x => x.Author).FirstOrDefaultAsync(x => x.Id.Equals(commentId))
+            ?? throw new ProcessException($"The comment (id: {commentId}) was not found");
+
+        comment = mapper.Map(model, comment);
+
+        context.Comments.Update(comment);
+        context.SaveChanges();
+
+        var response = mapper.Map<CommentModel>(await context.Comments.FirstOrDefaultAsync(x => x.Id.Equals(commentId)));
+
+        return response;
+    }
+
+    public async Task DeleteComment(int commentId)
+    {
+        using var context = await contextFactory.CreateDbContextAsync();
+
+        var comment = await context.Comments.FirstOrDefaultAsync(x => x.Id.Equals(commentId))
+            ?? throw new ProcessException($"The comment (id: {commentId}) was not found");
+
+        context.Remove(comment);
+        context.SaveChanges();
+    }
+    #endregion
+
+    #region CompositionFields
+    public async Task<CompositionFieldModel> AddCompositionField(int recipeId, AddCompositionFieldModel model)
+    {
+        model.RecipeId = recipeId;
+
+        using var context = await contextFactory.CreateDbContextAsync();
+        addCompositionFieldModelValidator.Check(model);
+
+        var compositionField = mapper.Map<CompositionField>(model);
+
+        await context.CompositionFields.AddAsync(compositionField);
+        context.SaveChanges();
+
+        var response = mapper.Map<CompositionFieldModel>(await context.CompositionFields.FirstOrDefaultAsync(x => x.Id.Equals(compositionField.Id)));
+
+        return response;
+    }
+
+    public async Task<CompositionFieldModel> UpdateCompositionField(int compositionFieldId, UpdateCompositionFieldModel model)
+    {
+        updateCompositionFieldModelValidator.Check(model);
+
+        using var context = await contextFactory.CreateDbContextAsync();
+
+        var compositionField = await context.CompositionFields.FirstOrDefaultAsync(x => x.Id.Equals(compositionFieldId))
+            ?? throw new ProcessException($"The compositionField (id: {compositionFieldId}) was not found");
+
+        compositionField = mapper.Map(model, compositionField);
+
+        context.CompositionFields.Update(compositionField);
+        context.SaveChanges();
+
+        var response = mapper.Map<CompositionFieldModel>(await context.CompositionFields.FirstOrDefaultAsync(x => x.Id.Equals(compositionFieldId)));
+
+        return response;
+    }
+
+    public async Task DeleteCompositionField(int compositionFieldId)
+    {
+        using var context = await contextFactory.CreateDbContextAsync();
+
+        var compositionField = await context.CompositionFields.FirstOrDefaultAsync(x => x.Id.Equals(compositionFieldId))
+            ?? throw new ProcessException($"The compositionField (id: {compositionFieldId}) was not found");
+
+        context.Remove(compositionField);
+        context.SaveChanges();
+    }
+    #endregion
 }

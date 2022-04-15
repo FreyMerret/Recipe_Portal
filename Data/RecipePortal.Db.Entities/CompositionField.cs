@@ -1,10 +1,10 @@
 ﻿namespace RecipePortal.Db.Entities;
 
-public class RecipeCompositionField : BaseEntity   //состав рецепта
+public class CompositionField : BaseEntity   //состав рецепта
 {
-    public int? RecipeId { get; set; }
+    public int RecipeId { get; set; }
 
-    public virtual Recipe? Recipe { get; set; }
+    public virtual Recipe Recipe { get; set; }
 
     public int IngredientId { get; set; }
 
