@@ -7,7 +7,6 @@ public class CommentResponse
 {
     public int Id { get; set; }
 
-    public Guid AuthorId { get; set; }
     public string AuthorNickname { get; set; }
 
     public string CommentText { get; set; }

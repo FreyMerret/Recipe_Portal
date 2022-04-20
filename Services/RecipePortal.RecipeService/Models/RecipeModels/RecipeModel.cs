@@ -7,7 +7,6 @@ public class RecipeModel
 {
     public int RecipeId { get; set; }
 
-    public Guid AuthorId { get; set; }
     public string Author { get; set; }
 
     public int CategoryId { get; set; }
