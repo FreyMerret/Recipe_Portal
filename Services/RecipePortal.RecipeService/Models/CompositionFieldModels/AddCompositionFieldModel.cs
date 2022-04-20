@@ -5,6 +5,7 @@ using RecipePortal.Db.Entities;
 namespace RecipePortal.RecipeService.Models;
 public class AddCompositionFieldModel
 {
+    public Guid RequestAuthor { get; set; }
     public int RecipeId { get; set; }   //добавление ингридиента может быть только в существующем рецепте, поэтому тут мы уже знаем Id рецепта
     public int IngredientId { get; set; }
     public string Quantity { get; set; }

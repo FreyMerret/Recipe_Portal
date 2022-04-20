@@ -4,6 +4,8 @@ using RecipePortal.Db.Context.Context;
 using RecipePortal.Db.Entities;
 using RecipePortal.Identity.Configuration.IS4;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using RecipePortal.Settings;
 
 public static class IS4Configuration
 {
@@ -30,9 +32,9 @@ public static class IS4Configuration
             .AddInMemoryApiResources(AppResources.Resources)
             .AddInMemoryIdentityResources(AppIdentityResources.Resources)
 
-            .AddTestUsers(AppApiTestUsers.ApiUsers)
+            //.AddTestUsers(AppApiTestUsers.ApiUsers)
 
-            .AddDeveloperSigningCredential();   //удалить в проде
+            .AddDeveloperSigningCredential();
 
         return services;
     }

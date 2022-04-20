@@ -6,6 +6,8 @@ namespace RecipePortal.RecipeService.Models;
 
 public class UpdateCompositionFieldModel
 {
+    public int CompositionFieldId { get; set; }
+    public Guid RequestAuthor { get; set; }
     public int IngredientId { get; set; }
     public string Quantity { get; set; }
 }

@@ -7,6 +7,7 @@ public class CompositionFieldModel
 {
     public int CompositionFieldId { get; set; }
     public string IngredientId { get; set; }
+    public string IngredientName { get; set; }
     public string Quantity { get; set; }
 }
 
@@ -15,6 +16,7 @@ public class CompositionFeildResponseProfile : Profile
     public CompositionFeildResponseProfile()
     {
         CreateMap<CompositionField, CompositionFieldModel>()
-            .ForMember(d => d.CompositionFieldId,a => a.MapFrom(src => src.Id));
+            .ForMember(d => d.CompositionFieldId,a => a.MapFrom(src => src.Id))
+            .ForMember(d => d.IngredientName, a => a.MapFrom(src => src.Ingredient.Name));
     }
 }

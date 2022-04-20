@@ -7,8 +7,7 @@ namespace RecipePortal.Identity
         public static void AddAppServices(this IServiceCollection services)
         {
             services
-                .AddSettings()
-                ;
+                .AddSettings();
         }
     }
 }

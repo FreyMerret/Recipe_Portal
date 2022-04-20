@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace RecipePortal.Db.Context.Migrations
 {
-    public partial class _00_new_init_v4 : Migration
+    public partial class _00_new_new_init : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -131,6 +131,60 @@ namespace RecipePortal.Db.Context.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "subscriptions_to_authors",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    SubscriberId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    AuthorId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Uid = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_subscriptions_to_authors", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_subscriptions_to_authors_users_AuthorId",
+                        column: x => x.AuthorId,
+                        principalTable: "users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_subscriptions_to_authors_users_SubscriberId",
+                        column: x => x.SubscriberId,
+                        principalTable: "users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "subscriptions_to_category",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    SubscriberId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    CategoryId = table.Column<int>(type: "int", nullable: false),
+                    Uid = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_subscriptions_to_category", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_subscriptions_to_category_categories_CategoryId",
+                        column: x => x.CategoryId,
+                        principalTable: "categories",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_subscriptions_to_category_users_SubscriberId",
+                        column: x => x.SubscriberId,
+                        principalTable: "users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "user_claims",
                 columns: table => new
                 {
@@ -221,7 +275,7 @@ namespace RecipePortal.Db.Context.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    AuthorId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    AuthorId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     CommentText = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
                     RecipeId = table.Column<int>(type: "int", nullable: false),
                     Uid = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
@@ -244,30 +298,58 @@ namespace RecipePortal.Db.Context.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "recipe_composition_fields",
+                name: "composition_fields",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    RecipeId = table.Column<int>(type: "int", nullable: true),
+                    RecipeId = table.Column<int>(type: "int", nullable: false),
                     IngredientId = table.Column<int>(type: "int", nullable: false),
                     Quantity = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Uid = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_recipe_composition_fields", x => x.Id);
+                    table.PrimaryKey("PK_composition_fields", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_recipe_composition_fields_ingredients_IngredientId",
+                        name: "FK_composition_fields_ingredients_IngredientId",
                         column: x => x.IngredientId,
                         principalTable: "ingredients",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_recipe_composition_fields_recipes_RecipeId",
+                        name: "FK_composition_fields_recipes_RecipeId",
                         column: x => x.RecipeId,
                         principalTable: "recipes",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "subscriptions_to_comments",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    SubscriberId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    RecipeId = table.Column<int>(type: "int", nullable: false),
+                    Uid = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_subscriptions_to_comments", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_subscriptions_to_comments_recipes_RecipeId",
+                        column: x => x.RecipeId,
+                        principalTable: "recipes",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_subscriptions_to_comments_users_SubscriberId",
+                        column: x => x.SubscriberId,
+                        principalTable: "users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateIndex(
@@ -299,24 +381,24 @@ namespace RecipePortal.Db.Context.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_ingredients_Uid",
-                table: "ingredients",
+                name: "IX_composition_fields_IngredientId",
+                table: "composition_fields",
+                column: "IngredientId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_composition_fields_RecipeId",
+                table: "composition_fields",
+                column: "RecipeId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_composition_fields_Uid",
+                table: "composition_fields",
                 column: "Uid",
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_recipe_composition_fields_IngredientId",
-                table: "recipe_composition_fields",
-                column: "IngredientId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_recipe_composition_fields_RecipeId",
-                table: "recipe_composition_fields",
-                column: "RecipeId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_recipe_composition_fields_Uid",
-                table: "recipe_composition_fields",
+                name: "IX_ingredients_Uid",
+                table: "ingredients",
                 column: "Uid",
                 unique: true);
 
@@ -333,6 +415,54 @@ namespace RecipePortal.Db.Context.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_recipes_Uid",
                 table: "recipes",
+                column: "Uid",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_subscriptions_to_authors_AuthorId",
+                table: "subscriptions_to_authors",
+                column: "AuthorId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_subscriptions_to_authors_SubscriberId",
+                table: "subscriptions_to_authors",
+                column: "SubscriberId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_subscriptions_to_authors_Uid",
+                table: "subscriptions_to_authors",
+                column: "Uid",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_subscriptions_to_category_CategoryId",
+                table: "subscriptions_to_category",
+                column: "CategoryId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_subscriptions_to_category_SubscriberId",
+                table: "subscriptions_to_category",
+                column: "SubscriberId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_subscriptions_to_category_Uid",
+                table: "subscriptions_to_category",
+                column: "Uid",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_subscriptions_to_comments_RecipeId",
+                table: "subscriptions_to_comments",
+                column: "RecipeId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_subscriptions_to_comments_SubscriberId",
+                table: "subscriptions_to_comments",
+                column: "SubscriberId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_subscriptions_to_comments_Uid",
+                table: "subscriptions_to_comments",
                 column: "Uid",
                 unique: true);
 
@@ -382,7 +512,16 @@ namespace RecipePortal.Db.Context.Migrations
                 name: "comments");
 
             migrationBuilder.DropTable(
-                name: "recipe_composition_fields");
+                name: "composition_fields");
+
+            migrationBuilder.DropTable(
+                name: "subscriptions_to_authors");
+
+            migrationBuilder.DropTable(
+                name: "subscriptions_to_category");
+
+            migrationBuilder.DropTable(
+                name: "subscriptions_to_comments");
 
             migrationBuilder.DropTable(
                 name: "user_claims");

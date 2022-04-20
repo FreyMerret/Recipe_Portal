@@ -313,6 +313,93 @@ namespace RecipePortal.Db.Context.Migrations
                     b.ToTable("recipes", (string)null);
                 });
 
+            modelBuilder.Entity("RecipePortal.Db.Entities.SubscriptionToAuthor", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<Guid>("AuthorId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("SubscriberId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("Uid")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AuthorId");
+
+                    b.HasIndex("SubscriberId");
+
+                    b.HasIndex("Uid")
+                        .IsUnique();
+
+                    b.ToTable("subscriptions_to_authors", (string)null);
+                });
+
+            modelBuilder.Entity("RecipePortal.Db.Entities.SubscriptionToCategory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<int>("CategoryId")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("SubscriberId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("Uid")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CategoryId");
+
+                    b.HasIndex("SubscriberId");
+
+                    b.HasIndex("Uid")
+                        .IsUnique();
+
+                    b.ToTable("subscriptions_to_category", (string)null);
+                });
+
+            modelBuilder.Entity("RecipePortal.Db.Entities.SubscriptionToComments", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<int>("RecipeId")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("SubscriberId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("Uid")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RecipeId");
+
+                    b.HasIndex("SubscriberId");
+
+                    b.HasIndex("Uid")
+                        .IsUnique();
+
+                    b.ToTable("subscriptions_to_comments", (string)null);
+                });
+
             modelBuilder.Entity("RecipePortal.Db.Entities.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -498,9 +585,68 @@ namespace RecipePortal.Db.Context.Migrations
                     b.Navigation("Category");
                 });
 
+            modelBuilder.Entity("RecipePortal.Db.Entities.SubscriptionToAuthor", b =>
+                {
+                    b.HasOne("RecipePortal.Db.Entities.User", "Author")
+                        .WithMany("Subscribers")
+                        .HasForeignKey("AuthorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("RecipePortal.Db.Entities.User", "Subscriber")
+                        .WithMany("SubscriptionsToAuthor")
+                        .HasForeignKey("SubscriberId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Author");
+
+                    b.Navigation("Subscriber");
+                });
+
+            modelBuilder.Entity("RecipePortal.Db.Entities.SubscriptionToCategory", b =>
+                {
+                    b.HasOne("RecipePortal.Db.Entities.Category", "Category")
+                        .WithMany("SubscriptionsToCategory")
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("RecipePortal.Db.Entities.User", "Subscriber")
+                        .WithMany("SubscriptionsToCategory")
+                        .HasForeignKey("SubscriberId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Category");
+
+                    b.Navigation("Subscriber");
+                });
+
+            modelBuilder.Entity("RecipePortal.Db.Entities.SubscriptionToComments", b =>
+                {
+                    b.HasOne("RecipePortal.Db.Entities.Recipe", "Recipe")
+                        .WithMany("SubscriptionsToComments")
+                        .HasForeignKey("RecipeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("RecipePortal.Db.Entities.User", "Subscriber")
+                        .WithMany("SubscriptionsToComments")
+                        .HasForeignKey("SubscriberId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Recipe");
+
+                    b.Navigation("Subscriber");
+                });
+
             modelBuilder.Entity("RecipePortal.Db.Entities.Category", b =>
                 {
                     b.Navigation("Recipes");
+
+                    b.Navigation("SubscriptionsToCategory");
                 });
 
             modelBuilder.Entity("RecipePortal.Db.Entities.Ingredient", b =>
@@ -513,6 +659,8 @@ namespace RecipePortal.Db.Context.Migrations
                     b.Navigation("Comments");
 
                     b.Navigation("CompositionFields");
+
+                    b.Navigation("SubscriptionsToComments");
                 });
 
             modelBuilder.Entity("RecipePortal.Db.Entities.User", b =>
@@ -520,6 +668,14 @@ namespace RecipePortal.Db.Context.Migrations
                     b.Navigation("Comments");
 
                     b.Navigation("Recipes");
+
+                    b.Navigation("Subscribers");
+
+                    b.Navigation("SubscriptionsToAuthor");
+
+                    b.Navigation("SubscriptionsToCategory");
+
+                    b.Navigation("SubscriptionsToComments");
                 });
 #pragma warning restore 612, 618
         }

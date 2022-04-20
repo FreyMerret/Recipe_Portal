@@ -5,7 +5,7 @@ namespace RecipePortal.RecipeService.Models;
 
 public class RecipeModel
 {
-    public int Id { get; set; }
+    public int RecipeId { get; set; }
 
     public Guid AuthorId { get; set; }
     public string Author { get; set; }
@@ -19,7 +19,7 @@ public class RecipeModel
 
     public string Text { get; set; }
 
-    public virtual List<CompositionFieldModel>? CompositionFields { get; set; }
+    public virtual List<CompositionFieldModel> CompositionFields { get; set; }
 }
 
 public class RecipeModelProfile : Profile
@@ -27,6 +27,7 @@ public class RecipeModelProfile : Profile
     public RecipeModelProfile()
     {
         CreateMap<Recipe, RecipeModel>()
+            .ForMember(d => d.RecipeId, a => a.MapFrom(src => src.Id))
             .ForMember(d => d.Category, a => a.MapFrom(src => src.Category.Title))
             .ForMember(d => d.Author, a => a.MapFrom(src => src.Author.UserName))
             .ForMember(d => d.CompositionFields, a => a.MapFrom(src => src.CompositionFields));

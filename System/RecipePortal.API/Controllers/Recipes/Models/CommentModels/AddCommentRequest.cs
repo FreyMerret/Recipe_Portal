@@ -7,7 +7,6 @@ namespace RecipePortal.API.Controllers.Recipes.Models;
 
 public class AddCommentRequest
 {
-    public Guid AuthorId { get; set; }
     public string CommentText { get; set; }
 }
 

@@ -2,13 +2,19 @@
 
 using RecipePortal.Settings;
 using RecipePortal.RecipeService;
-//using DSRNetSchool.BookService;
+using RecipePortal.EmailService;
+using RecipePortal.RabbitMqService;
+using RecipePortal.UserAccountService;
+
 public static class Bootstrapper
 {
     public static void AddAppServices(this IServiceCollection services)
     {
         services
             .AddSettings()
-            .AddRecipeService();
+            .AddRecipeService()
+            .AddEmailSender()
+            .AddRabbitMq()
+            .AddUserAccountService();
     }
 }

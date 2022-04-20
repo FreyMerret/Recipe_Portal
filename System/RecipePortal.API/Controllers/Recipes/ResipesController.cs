@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using System.Web;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -9,41 +10,47 @@ using RecipePortal.Common.Security;
 using RecipePortal.Db.Entities;
 using RecipePortal.RecipeService;
 using RecipePortal.RecipeService.Models;
+using RecipePortal.UserAccountService;
+using RecipePortal.UserAccountService.Models;
 
 namespace RecipePortal.API.Controllers.Recipes;
 
+/// <summary>
+/// Управление рецептами, ингридиентами, комментариями, подписками на рецепты и комменатрии
+/// </summary>
 [Route("api/v{version:apiVersion}/resipes")]
 [ApiController]
 [ApiVersion("1.0")]
-[Authorize]
 public class ResipesController : ControllerBase
 {
     private readonly IMapper mapper;
     private readonly ILogger<ResipesController> logger;
     private readonly IRecipeService recipeService;
     private readonly UserManager<User> userManager;
+    private readonly IUserAccountService userAccountService;
 
-    public ResipesController(IMapper mapper, ILogger<ResipesController> logger, IRecipeService recipeService, UserManager<User> userManager)
+    public ResipesController(IMapper mapper, ILogger<ResipesController> logger, IRecipeService recipeService, UserManager<User> userManager, IUserAccountService userAccountService)
     {
         this.mapper = mapper;
         this.logger = logger;
         this.recipeService = recipeService;
         this.userManager = userManager; //для работы с пользователями
+        this.userAccountService = userAccountService;
     }
 
+    #region --------------------------------------------------Recipes--------------------------------------------------
     /// <summary>
-    /// Констроллеры, связанные с рецептами
+    /// Выдача всех рецептов + фильтры
     /// </summary>
-    #region Recipes
-    
+    /// <param name="recipeName">Фильтр по имени. Выдача будет содержать только рецепты, в имени которых содержится введенная строка</param>
+    /// <param name="categoryId">Фильтр по категории. Выдача будет содержать только рецепты данной категории (ID категории)</param>
+    /// <param name="authorNickname">Фильтр по автору. Выдача будет содержать только рецепты данного автора (Ник автора)</param>
+    /// <param name="offset">Количество рецептов, которое надо пропустить в выдаче</param>
+    /// <param name="limit">Количество рецептов, которое надо выдать</param>
+    /// <returns></returns>
     [RequiredScope(AppScopes.RecipesRead)]
     [HttpGet]
-    public async Task<IEnumerable<RecipeResponse>> GetRecipes(
-        [FromQuery] string recipeName = "",
-        [FromQuery] int categoryId = 0,
-        [FromQuery] string authorNickname = "",
-        [FromQuery] int offset = 0,
-        [FromQuery] int limit = 10)
+    public async Task<IEnumerable<RecipeResponse>> GetRecipes([FromQuery] string recipeName = "", [FromQuery] int categoryId = 0, [FromQuery] string authorNickname = "", [FromQuery] int offset = 0, [FromQuery] int limit = 10)
     {
         var recipes = await recipeService.GetRecipes(recipeName, categoryId, authorNickname, offset, limit);
         var response = mapper.Map<IEnumerable<RecipeResponse>>(recipes);
@@ -51,6 +58,11 @@ public class ResipesController : ControllerBase
         return response;
     }
 
+    /// <summary>
+    /// Выдача конкретного рецепта
+    /// </summary>
+    /// <param name="recipeId">ID рецепта</param>
+    /// <returns></returns>
     [RequiredScope(AppScopes.RecipesRead)]
     [HttpGet("{recipeId}")]
     public async Task<RecipeResponse> GetRecipeById([FromRoute] int recipeId)
@@ -61,45 +73,73 @@ public class ResipesController : ControllerBase
         return response;
     }
 
+    /// <summary>
+    /// Добавление рецепта
+    /// </summary>
+    /// <param name="request">Форма добавления рецепта</param>
+    /// <returns></returns>
     [RequiredScope(AppScopes.RecipesWrite)]
     [HttpPost]
+    [Authorize]
     public async Task<RecipeResponse> AddRecipe([FromBody] AddRecipeRequest request)
     {
         var model = mapper.Map<AddRecipeModel>(request);
-        //model.Author = HttpContext.User.Identity.Name;        //допилить когда будет фронт
+        model.AuthorId = new Guid(HttpContext.User.Claims.FirstOrDefault(c => c.Type == "sub").Value); //получение guid авторизованного пользователя из claims запроса
         var recipe = await recipeService.AddRecipe(model);
         var response = mapper.Map<RecipeResponse>(recipe);
 
         return response;
     }
 
+    /// <summary>
+    /// Изменение рецепта (ингридиенты рецепта изменяются отдельным контроллером по одному)
+    /// </summary>
+    /// <param name="recipeId">ID рецепта, который необходимо изменить</param>
+    /// <param name="request">Форма изменения рецепта</param>
+    /// <returns></returns>
     [RequiredScope(AppScopes.RecipesWrite)]
     [HttpPut("{recipeId}")]
+    [Authorize]
     public async Task<RecipeResponse> UpdateRecipe([FromRoute] int recipeId, [FromBody] UpdateRecipeRequest request)
     {
         var model = mapper.Map<UpdateRecipeModel>(request);
-        var recipe = await recipeService.UpdateRecipe(recipeId, model);
+        model.RecipeId = recipeId;
+        model.RequestAuthor = new Guid(HttpContext.User.Claims.FirstOrDefault(c => c.Type == "sub").Value);
+        var recipe = await recipeService.UpdateRecipe(model);
         var response = mapper.Map<RecipeResponse>(recipe);
 
         return response;
     }
 
+    /// <summary>
+    /// Удаление рецепта
+    /// </summary>
+    /// <param name="recipeId">ID рецепта, который необходимо удалить</param>
+    /// <returns></returns>
     [RequiredScope(AppScopes.RecipesWrite)]
     [HttpDelete("{recipeId}")]
+    [Authorize]
     public async Task<IActionResult> DeleteRecipe([FromRoute] int recipeId)
     {
-        await recipeService.DeleteRecipe(recipeId);
+        var requestAuthor = new Guid(HttpContext.User.Claims.FirstOrDefault(c => c.Type == "sub").Value);
+        await recipeService.DeleteRecipe(recipeId, requestAuthor);
 
         return Ok();
     }
 
     #endregion
 
-    /// <summary>
-    /// Констроллеры, связанные с комментариями
-    /// </summary>
-    #region Comments
 
+
+    #region -------------------------------------------------Comments--------------------------------------------------
+
+    /// <summary>
+    /// Получение комментариев к рецепту
+    /// </summary>
+    /// <param name="recipeId">ID рецепта, для которого необходимо получить комментарии</param>
+    /// <param name="offset">Количество комментариев, которые необходимо пропустить</param>
+    /// <param name="limit">Количество комментариев, которые необходимо выдать</param>
+    /// <returns></returns>
     [RequiredScope(AppScopes.CommentsRead)]
     [HttpGet("{recipeId}/comments")]
     public async Task<IEnumerable<CommentResponse>> GetComments([FromRoute] int recipeId, [FromQuery] int offset = 0, [FromQuery] int limit = 10)
@@ -110,72 +150,195 @@ public class ResipesController : ControllerBase
         return response;
     }
 
+    /// <summary>
+    /// Добавление комментария к рецепту
+    /// </summary>
+    /// <param name="recipeId">ID рецепта, куда добавляется комментарий</param>
+    /// <param name="request">Форма комментария</param>
+    /// <returns></returns>
     [RequiredScope(AppScopes.CommentsWrite)]
     [HttpPost("{recipeId}/comments")]
+    [Authorize]
     public async Task<CommentResponse> AddComment([FromRoute] int recipeId, [FromBody] AddCommentRequest request)
     {
         var model = mapper.Map<AddCommentModel>(request);
-        var comment = await recipeService.AddComment(recipeId, model);
+        model.RecipeId = recipeId;
+        model.AuthorId = new Guid(HttpContext.User.Claims.FirstOrDefault(c => c.Type == "sub").Value);
+        var comment = await recipeService.AddComment(model);
         var response = mapper.Map<CommentResponse>(comment);
 
         return response;
     }
 
+    /// <summary>
+    /// Изменение комментария
+    /// </summary>
+    /// <param name="commentId">ID изменяемого комментария</param>
+    /// <param name="request">Форма для изменения комментария</param>
+    /// <returns></returns>
     [RequiredScope(AppScopes.CommentsWrite)]
     [HttpPut("{recipeId}/comments/{commentId}")]
+    [Authorize]
     public async Task<CommentResponse> UpdateComment([FromRoute] int commentId, [FromBody] UpdateCommentRequest request)
     {
         var model = mapper.Map<UpdateCommentModel>(request);
-        var comment = await recipeService.UpdateComment(commentId, model);
+        model.CommentId = commentId;
+        model.RequestAuthor = new Guid(HttpContext.User.Claims.FirstOrDefault(c => c.Type == "sub").Value);
+        var comment = await recipeService.UpdateComment(model);
         var response = mapper.Map<CommentResponse>(comment);
 
         return response;
     }
 
+    /// <summary>
+    /// Удаление комментария
+    /// </summary>
+    /// <param name="commentId">ID удаляемого комментария</param>
+    /// <returns></returns>
     [RequiredScope(AppScopes.CommentsWrite)]
     [HttpDelete("{recipeId}/comments/{commentId}")]
+    [Authorize]
     public async Task<IActionResult> DeleteComment([FromRoute] int commentId)
     {
-        await recipeService.DeleteComment(commentId);
+        var requestAuthor = new Guid(HttpContext.User.Claims.FirstOrDefault(c => c.Type == "sub").Value);
+        await recipeService.DeleteComment(commentId, requestAuthor);
 
         return Ok();
     }
     #endregion
 
-    /// <summary>
-    /// Констроллеры, связанные с полями рецепта
-    /// </summary>
-    #region CompositionFields
 
+
+    #region ---------------------------------------------CompositionFields---------------------------------------------
+
+    /// <summary>
+    /// Добавление ингридиента в существующий рецепт по ID рецепта
+    /// </summary>
+    /// <param name="recipeId">ID рецепта</param>
+    /// <param name="request">Описание добавляемого ингридиента</param>
+    /// <returns></returns>
     [RequiredScope(AppScopes.RecipesWrite)]
     [HttpPost("{recipeId}/ingredients")]
+    [Authorize]
     public async Task<CompositionFieldResponse> AddCompositionField([FromRoute]int recipeId, [FromBody] AddCompositionFieldRequest request)
     {
         var model = mapper.Map<AddCompositionFieldModel>(request);
-        var compositionField = await recipeService.AddCompositionField(recipeId, model);
+        model.RecipeId = recipeId;
+        model.RequestAuthor = new Guid(HttpContext.User.Claims.FirstOrDefault(c => c.Type == "sub").Value);
+        var compositionField = await recipeService.AddCompositionField(model);
         var response = mapper.Map<CompositionFieldResponse>(compositionField);
 
         return response;
     }
 
+    /// <summary>
+    /// Изменение ингридиента в существующем рецепту по ID рецепта
+    /// </summary>
+    /// <param name="compositionFieldId">ID рецепта</param>
+    /// <param name="request">Описание обновляемного ингридиента</param>
+    /// <returns></returns>
     [RequiredScope(AppScopes.RecipesWrite)]
     [HttpPut("{recipeId}/ingredients/{compositionFieldId}")]
+    [Authorize]
     public async Task<CompositionFieldResponse> UpdateCompositionField([FromRoute] int compositionFieldId, [FromBody] UpdateCompositionFieldRequest request)
     {
         var model = mapper.Map<UpdateCompositionFieldModel>(request);
-        var compositionField = await recipeService.UpdateCompositionField(compositionFieldId, model);
+        model.CompositionFieldId = compositionFieldId;
+        model.RequestAuthor = new Guid(HttpContext.User.Claims.FirstOrDefault(c => c.Type == "sub").Value);
+        var compositionField = await recipeService.UpdateCompositionField(model);
         var response = mapper.Map<CompositionFieldResponse>(compositionField);
 
         return response;
     }
 
+    /// <summary>
+    /// Удаление ингридиента в существующем рецепту по ID ингридиента
+    /// </summary>
+    /// <param name="compositionFieldId">ID ингридиента</param>
+    /// <returns></returns>
     [RequiredScope(AppScopes.RecipesWrite)]
     [HttpDelete("{recipeId}/ingredients/{compositionFieldId}")]
+    [Authorize]
     public async Task<IActionResult> DeleteCompositionField([FromRoute] int compositionFieldId)
     {
-        await recipeService.DeleteCompositionField(compositionFieldId);
+        var requestAuthor = new Guid(HttpContext.User.Claims.FirstOrDefault(c => c.Type == "sub").Value);
+        await recipeService.DeleteCompositionField(compositionFieldId, requestAuthor);
 
         return Ok();
     }
+    #endregion
+
+
+
+    #region -------------------------------------------------Addition--------------------------------------------------
+    /// <summary>
+    /// Выдача списка категорий и их ID
+    /// </summary>
+    /// <returns></returns>
+    [RequiredScope(AppScopes.RecipesRead)]
+    [HttpGet("categories")]
+    public async Task<IEnumerable<CategoryResponse>> GetCategories()
+    {
+        var categories = await recipeService.GetCategories();
+        return mapper.Map<IEnumerable<CategoryResponse>>(categories);
+    }
+
+    /// <summary>
+    /// Выдача списка интгридентов и их ID
+    /// </summary>
+    /// <returns></returns>
+    [RequiredScope(AppScopes.RecipesRead)]
+    [HttpGet("ingredients")]
+    public async Task<IEnumerable<IngredientResponse>> GetIngredients()
+    {
+        var ingredients = await recipeService.GetIngredients();
+        return mapper.Map<IEnumerable<IngredientResponse>>(ingredients);
+    }
+    #endregion
+
+
+    #region -------------------------------------------------Subscribe-------------------------------------------------
+    /// <summary>
+    /// Подписка на новые комментарии к рецепту
+    /// </summary>
+    /// <param name="recipeId">ID рецепта</param>
+    /// <returns></returns>
+    [HttpPost("{recipeId}/subscribe")]    //мы нажимаем на кнопку подписаться на странице автора
+    public async Task<IActionResult> AddSubscriptionToComments([FromRoute] int recipeId)
+    {
+        var subscriber = new Guid(HttpContext.User.Claims.FirstOrDefault(c => c.Type == "sub").Value);
+
+        SubscriptionToCommentsModel model = new SubscriptionToCommentsModel()
+        {
+            SubscriberId = subscriber,
+            RecipeId = recipeId
+        };  //формы для подписки нет, есть просто кнопка подписаться, а создавать DTO request-а не за чем, поэтому формируем сразу DTO модели
+
+        await userAccountService.AddSubscriptionToComments(model);
+
+        return Ok();
+    }
+
+    /// <summary>
+    /// Подписка на новые рецепты из категории рецептов
+    /// </summary>
+    /// <param name="categoryId">ID категории</param>
+    /// <returns></returns>
+    [HttpPost("categories/{categoryId}/subscribe")]    //мы нажимаем на кнопку подписаться на странице автора
+    public async Task<IActionResult> AddSubscriptionToCategory([FromRoute] int categoryId)
+    {
+        var subscriber = new Guid(HttpContext.User.Claims.FirstOrDefault(c => c.Type == "sub").Value);
+
+        SubscriptionToCategoryModel model = new SubscriptionToCategoryModel()
+        {
+            SubscriberId = subscriber,
+            CategoryId = categoryId
+        };  //формы для подписки нет, есть просто кнопка подписаться, а создавать DTO request-а не за чем, поэтому формируем сразу DTO модели
+
+        await userAccountService.AddSubscriptionToCategory(model);
+
+        return Ok();
+    }
+
     #endregion
 }

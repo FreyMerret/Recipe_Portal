@@ -10,8 +10,24 @@ services:
       - "21433:1433"
     networks:
       - shared-recipeportal-net
-    #volumes:      
-      #- sqlserver-data:/var/opt/mssql
+    volumes:      
+      - sqlserver-data:/var/opt/mssql
+
+  recipeportal_redis:
+    ports:
+      - "26379:6379"
+    networks:
+      - shared-recipeportal-net
+
+  recipeportal_rabbitmq:
+    ports:
+      - "25672:5672"
+      - "25673:5673"
+      - "35672:15672" 
+    networks:
+      - shared-recipeportal-net
+    volumes:      
+      - rabbitmq-data:/var/lib/rabbitmq/
 
   recipeportal_api:
     ports:
@@ -29,10 +45,20 @@ services:
     env_file:
       - env.identity
 
-#volumes:
-  #sqlserver-data:
+  recipeportal_worker:
+    ports:
+      - "20002:80"
+    networks:
+      - shared-recipeportal-net
+    env_file:
+      - env.worker
+
+volumes:
+  sqlserver-data:
+  rabbitmq-data:
 
 networks:
   shared-recipeportal-net:
     name: RecipePortal
     driver: bridge
+

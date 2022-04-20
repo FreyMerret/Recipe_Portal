@@ -65,9 +65,11 @@ public static class DbSeed
         #region AddUsers
         var user1 = new User()
         {
-            UserName = "FreyMerret",
+            UserName = "TestAuthor",
             Name = "Павел",
             Surname = "Подгорный",
+            Email = "",
+            PasswordHash = "Passw0rd".GetHashCode().ToString(),
             Status = 0,
             Recipes = new List<Recipe>() { },
             Comments = new List<Comment>() { }

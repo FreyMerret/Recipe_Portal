@@ -13,8 +13,6 @@ public class AddRecipeCompositionFieldRequest
 
 public class AddRecipeRequest
 {
-    public Guid AuthorId { get; set; }
-
     public int CategoryId { get; set; }
 
     public string Title { get; set; }

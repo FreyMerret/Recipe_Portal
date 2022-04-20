@@ -12,6 +12,9 @@ public class MainDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
     public DbSet<Ingredient> Ingredients { get; set; }
     public DbSet<Recipe> Recipes { get; set; }
     public DbSet<CompositionField> CompositionFields { get; set; }
+    public DbSet<SubscriptionToAuthor> SubscriptionsToAuthor { get; set; }
+    public DbSet<SubscriptionToCategory> SubscriptionsToCategory { get; set; }
+    public DbSet<SubscriptionToComments> SubscriptionsToComments { get; set; }
 
     public MainDbContext(DbContextOptions<MainDbContext> options) : base(options) { }
 
@@ -49,9 +52,20 @@ public class MainDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
         modelBuilder.Entity<Recipe>().HasOne(x => x.Category).WithMany(x => x.Recipes).HasForeignKey(x => x.CategoryId).OnDelete(DeleteBehavior.Cascade); //чтоб не ругался компилятор, категории удалять не собираюсь
         modelBuilder.Entity<Recipe>().HasOne(x => x.Author).WithMany(x => x.Recipes).HasForeignKey(x => x.AuthorId).OnDelete(DeleteBehavior.Cascade);
 
-        modelBuilder.Entity<CompositionField>().ToTable("composition_fields"); //состав
+        modelBuilder.Entity<CompositionField>().ToTable("composition_fields"); //состав рецепта
         modelBuilder.Entity<CompositionField>().HasOne(x => x.Recipe).WithMany(x => x.CompositionFields).HasForeignKey(x => x.RecipeId).OnDelete(DeleteBehavior.Cascade);
 
+        modelBuilder.Entity<SubscriptionToAuthor>().ToTable("subscriptions_to_authors");
+        modelBuilder.Entity<SubscriptionToAuthor>().HasOne(x => x.Subscriber).WithMany(x => x.SubscriptionsToAuthor).HasForeignKey(x => x.SubscriberId).OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<SubscriptionToAuthor>().HasOne(x => x.Author).WithMany(x => x.Subscribers).HasForeignKey(x => x.AuthorId).OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<SubscriptionToCategory>().ToTable("subscriptions_to_category");
+        modelBuilder.Entity<SubscriptionToCategory>().HasOne(x => x.Subscriber).WithMany(x => x.SubscriptionsToCategory).HasForeignKey(x => x.SubscriberId).OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<SubscriptionToCategory>().HasOne(x => x.Category).WithMany(x => x.SubscriptionsToCategory).HasForeignKey(x => x.CategoryId);
+
+        modelBuilder.Entity<SubscriptionToComments>().ToTable("subscriptions_to_comments");
+        modelBuilder.Entity<SubscriptionToComments>().HasOne(x => x.Subscriber).WithMany(x => x.SubscriptionsToComments).HasForeignKey(x => x.SubscriberId).OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<SubscriptionToComments>().HasOne(x => x.Recipe).WithMany(x => x.SubscriptionsToComments).HasForeignKey(x => x.RecipeId);
 
         //modelBuilder.Entity<Comment>().HasOne(x => x.Author).WithOne(x => x.Detail).HasPrincipalKey<AuthorDetail>(x => x.Id);
         //modelBuilder.Entity<Recipe>().HasOne(x => x.Category).WithMany(x => x.Recipes).HasForeignKey(x => x.CategoryId).OnDelete(DeleteBehavior.Restrict);

@@ -5,7 +5,7 @@ namespace RecipePortal.API.Controllers.Recipes.Models;
 
 public class RecipeResponse
 {
-    public int Id { get; set; }
+    public int RecipeId { get; set; }
 
     public Guid AuthorId { get; set; }
     public string Author { get; set; }

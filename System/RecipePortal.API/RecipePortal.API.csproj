@@ -8,6 +8,7 @@
     <DockerfileContext>..\..</DockerfileContext>
     <DockerComposeProjectPath>..\..\docker-compose.dcproj</DockerComposeProjectPath>
 	<ErrorOnDuplicatePublishOutputFiles>false</ErrorOnDuplicatePublishOutputFiles>
+	<GenerateDocumentationFile>True</GenerateDocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -16,6 +17,7 @@
     <PackageReference Include="FluentValidation" Version="10.4.0" />
     <PackageReference Include="FluentValidation.AspNetCore" Version="10.4.0" />
     <PackageReference Include="IdentityServer4.AccessTokenValidation" Version="3.0.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="6.0.4" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Versioning" Version="5.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Versioning.ApiExplorer" Version="5.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.3">
@@ -36,7 +38,10 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Data\RecipePortal.Db.Context\RecipePortal.Db.Context.csproj" />
+    <ProjectReference Include="..\..\Services\RecipePortal.EmailService\RecipePortal.EmailService.csproj" />
+    <ProjectReference Include="..\..\Services\RecipePortal.RabbitMqService\RecipePortal.RabbitMqService.csproj" />
     <ProjectReference Include="..\..\Services\RecipePortal.RecipeService\RecipePortal.RecipeService.csproj" />
+    <ProjectReference Include="..\..\Services\RecipePortal.UserAccountService\RecipePortal.UserAccountService.csproj" />
     <ProjectReference Include="..\..\Shared\RecipePortal.Common\RecipePortal.Common.csproj" />
     <ProjectReference Include="..\..\Shared\RecipePortal.Settings\RecipePortal.Settings.csproj" />
   </ItemGroup>

@@ -21,11 +21,6 @@
     <PackageReference Include="Duende.IdentityServer" Version="6.0.4" />
     <PackageReference Include="Duende.IdentityServer.AspNetIdentity" Version="6.0.4" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.14.0" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.3.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Controllers\" />
   </ItemGroup>
 
   <ItemGroup>
@@ -33,7 +28,6 @@
     <ProjectReference Include="..\..\Data\RecipePortal.Db.Entities\RecipePortal.Db.Entities.csproj" />
     <ProjectReference Include="..\..\Shared\RecipePortal.Common\RecipePortal.Common.csproj" />
     <ProjectReference Include="..\..\Shared\RecipePortal.Settings\RecipePortal.Settings.csproj" />
-    <ProjectReference Include="..\RecipePortal.API\RecipePortal.API.csproj" />
   </ItemGroup>
 
 </Project>

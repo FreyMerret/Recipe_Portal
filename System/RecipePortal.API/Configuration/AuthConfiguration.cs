@@ -1,6 +1,7 @@
 ﻿namespace RecipePortal.API.Configuration;
 
 using IdentityServer4.AccessTokenValidation;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using RecipePortal.Common.Security;
@@ -38,7 +39,7 @@ public static class AuthConfiguration
             {
                 options.RequireHttpsMetadata = settings.IdentityServer.RequireHttps;
                 options.Authority = settings.IdentityServer.Url;
-                options.TokenValidationParameters = new TokenValidationParameters
+                options.TokenValidationParameters = new TokenValidationParameters   //править?
                 {
                     ValidateIssuerSigningKey = false,
                     ValidateIssuer = false,

@@ -6,6 +6,10 @@ namespace RecipePortal.RecipeService.Models;
 
 public class UpdateRecipeModel
 {
+    public Guid RequestAuthor { get; set; }
+
+    public int RecipeId { get; set; }
+
     public int CategoryId { get; set; }
 
     public string Title { get; set; }

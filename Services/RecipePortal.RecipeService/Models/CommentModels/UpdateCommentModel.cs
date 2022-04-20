@@ -6,6 +6,8 @@ namespace RecipePortal.RecipeService.Models;
 
 public class UpdateCommentModel
 {
+    public Guid RequestAuthor { get; set; }
+    public int CommentId { get; set; }
     public string CommentText { get; set; }
 }
 
