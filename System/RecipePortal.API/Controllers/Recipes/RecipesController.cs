@@ -12,24 +12,25 @@ using RecipePortal.RecipeService;
 using RecipePortal.RecipeService.Models;
 using RecipePortal.UserAccountService;
 using RecipePortal.UserAccountService.Models;
+using RecipePortal.API.Controllers.UserAccounts.Models;
 
 namespace RecipePortal.API.Controllers.Recipes;
 
 /// <summary>
 /// Управление рецептами, ингридиентами, комментариями, подписками на рецепты и комменатрии
 /// </summary>
-[Route("api/v{version:apiVersion}/resipes")]
+[Route("api/v{version:apiVersion}/recipes")]
 [ApiController]
 [ApiVersion("1.0")]
-public class ResipesController : ControllerBase
+public class RecipesController : ControllerBase
 {
     private readonly IMapper mapper;
-    private readonly ILogger<ResipesController> logger;
+    private readonly ILogger<RecipesController> logger;
     private readonly IRecipeService recipeService;
     private readonly UserManager<User> userManager;
     private readonly IUserAccountService userAccountService;
 
-    public ResipesController(IMapper mapper, ILogger<ResipesController> logger, IRecipeService recipeService, UserManager<User> userManager, IUserAccountService userAccountService)
+    public RecipesController(IMapper mapper, ILogger<RecipesController> logger, IRecipeService recipeService, UserManager<User> userManager, IUserAccountService userAccountService)
     {
         this.mapper = mapper;
         this.logger = logger;
@@ -297,25 +298,44 @@ public class ResipesController : ControllerBase
     #endregion
 
 
-    #region -------------------------------------------------Subscribe-------------------------------------------------
+    #region ----------------------------------------------Subscriptions------------------------------------------------
     /// <summary>
     /// Подписка на новые комментарии к рецепту
     /// </summary>
     /// <param name="recipeId">ID рецепта</param>
     /// <returns></returns>
     [HttpPost("{recipeId}/subscribe")]    //мы нажимаем на кнопку подписаться на странице автора
-    public async Task<IActionResult> AddSubscriptionToComments([FromRoute] int recipeId)
+    public async Task<SubscriptionToCommentsResponse> AddSubscriptionToComments([FromRoute] int recipeId)
     {
         var subscriber = new Guid(HttpContext.User.Claims.FirstOrDefault(c => c.Type == "sub").Value);
 
-        SubscriptionToCommentsModel model = new SubscriptionToCommentsModel()
+        AddSubscriptionToCommentsModel model = new AddSubscriptionToCommentsModel()
         {
             SubscriberId = subscriber,
             RecipeId = recipeId
         };  //формы для подписки нет, есть просто кнопка подписаться, а создавать DTO request-а не за чем, поэтому формируем сразу DTO модели
 
-        await userAccountService.AddSubscriptionToComments(model);
+        var response = mapper.Map<SubscriptionToCommentsResponse>(await userAccountService.AddSubscriptionToComments(model));
 
+        return response;
+    }
+
+    /// <summary>
+    /// Отписка от новых комментариев в рецепте
+    /// </summary>
+    /// <param name="subscriptionId"></param>
+    /// <returns></returns>
+    [HttpDelete("unsubscribe/{subscriptionId}")]
+    [Authorize]
+    public async Task<IActionResult> DeleteSubscriptionToComments([FromRoute] int subscriptionId)
+    {
+        var model = new DeleteSubscriptionModel()
+        {
+            Subscriber = new Guid(HttpContext.User.Claims.FirstOrDefault(c => c.Type == "sub").Value),
+            SubscriptionId = subscriptionId
+        };
+
+        await userAccountService.DeleteSubscriptionToComments(model);
         return Ok();
     }
 
@@ -325,18 +345,41 @@ public class ResipesController : ControllerBase
     /// <param name="categoryId">ID категории</param>
     /// <returns></returns>
     [HttpPost("categories/{categoryId}/subscribe")]    //мы нажимаем на кнопку подписаться на странице автора
-    public async Task<IActionResult> AddSubscriptionToCategory([FromRoute] int categoryId)
+    public async Task<SubscriptionToCategoryResponse> AddSubscriptionToCategory([FromRoute] int categoryId)
     {
         var subscriber = new Guid(HttpContext.User.Claims.FirstOrDefault(c => c.Type == "sub").Value);
 
-        SubscriptionToCategoryModel model = new SubscriptionToCategoryModel()
+        AddSubscriptionToCategoryModel model = new AddSubscriptionToCategoryModel()
         {
             SubscriberId = subscriber,
             CategoryId = categoryId
         };  //формы для подписки нет, есть просто кнопка подписаться, а создавать DTO request-а не за чем, поэтому формируем сразу DTO модели
 
-        await userAccountService.AddSubscriptionToCategory(model);
+        var response = mapper.Map<SubscriptionToCategoryResponse>(await userAccountService.AddSubscriptionToCategory(model));
 
+        return response;
+    }
+
+    /// <summary>
+    /// Отписака от новых рецептов в категории
+    /// </summary>
+    /// <param name="subscriptionId"></param>
+    /// <returns></returns>
+    ///     Я передаю Id подписки, вместо того, чтобы передавть Id категории для того, чтобы БД не нужно было искать подписку с конкретным подписчиком и категорией
+    ///     Вместо этого БД просто найдет конкретную подписку по Id и просто проверит подписчика уже в этой подписке
+    ///     По факту я здесть я просто жертвую красотой URL ради производительности и вместо HttpDelete("categories/{categoryId}/subscribe") ставлю другой адрес, но
+    ///     при этом БД не придется каждый раз искать подписку. Немного оптимизации, так сказать
+    [HttpDelete("categories/unsubscribe/{subscriptionId}")]
+    [Authorize]
+    public async Task<IActionResult> DeleteSubscriptionToCategory([FromRoute] int subscriptionId)
+    {
+        var model = new DeleteSubscriptionModel()
+        {
+            Subscriber = new Guid(HttpContext.User.Claims.FirstOrDefault(c => c.Type == "sub").Value),
+            SubscriptionId = subscriptionId
+        };
+
+        await userAccountService.DeleteSubscriptionToCategory(model);
         return Ok();
     }
 

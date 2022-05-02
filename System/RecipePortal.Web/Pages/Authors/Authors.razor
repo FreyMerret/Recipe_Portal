@@ -1,0 +1,118 @@
+﻿@page "/authors"
+@layout MainLayout
+
+@attribute [Authorize]
+
+@inject ISnackbar Snackbar
+@inject IAuthorService authorService
+@inject IRecipeService recipeService
+
+<MudStack Justify=Justify.Center AlignItems=AlignItems.Center Row="false" Class=gap-0>
+
+    <MudPaper Width="800px" Elevation="4" Class="mt-4 mb-2 p-3 pt-0">
+        <MudStack Justify=Justify.Center AlignItems=AlignItems.Center Row="true">
+            <MudTextField @bind-Value="_authorNickname" HelperText="Имя автора" Variant="Variant.Text" Clearable></MudTextField>
+
+            <MudButton Variant="Variant.Filled" EndIcon="@Icons.Filled.Search" OnClick="ReloadData" Color="Color.Primary">Найти</MudButton>
+        </MudStack>
+    </MudPaper>
+
+    @foreach(var a in authors)
+    {
+        <MudPaper Width="800px" Elevation="4" Class="mt-2 p-3">
+            <MudStack Justify=Justify.FlexStart AlignItems=AlignItems.Start Row="true">
+                <MudPaper Width="80%" Elevation="0">
+                    <MudStack Justify=Justify.FlexStart AlignItems=AlignItems.Start Row="true">                
+                        <MudPaper Width="70px" Height="70px" Elevation="0">
+                            <MudAvatar Color="Color.Primary" Style="height:50px; width:50px;"> 
+                                <MudIcon Icon="@Icons.Filled.CrueltyFree" />
+                            </MudAvatar>
+                            @*<MudImage ObjectFit="ObjectFit.Cover" Alt="Author photo" Elevation="4" Class="rounded-lg"/>*@
+                        </MudPaper>
+                    
+                        <MudPaper MaxWidth="60%" Elevation="0">
+                            <MudLink Href=@($"/authors/{a.Username}") Typo="Typo.h5">@a.Username</MudLink>
+                            <MudText Typo="Typo.body2">@a.Name @a.Surname</MudText>
+                            <MudText Typo="Typo.body2">@a.Email</MudText>
+                        </MudPaper>
+                    </MudStack>
+                </MudPaper>
+                @*<MudPaper Width="20%" Class="align-self-center">
+                    <MudButton Variant="Variant.Filled" EndIcon="@Icons.Filled.Mail" Color="Color.Primary">Подписаться</MudButton>
+                </MudPaper>*@
+            </MudStack>
+        </MudPaper>
+    }
+
+    <MudPaper Elevation="0" Class="mb-4">
+        @if (_offset != 0)
+        {
+            <MudButton Variant="Variant.Filled" EndIcon="@Icons.Filled.NavigateBefore" OnClick="GetPrevious" Color="Color.Primary" Class="mx-2 ">Предыдущая</MudButton>
+        }
+        @if (_authorsCount == _limit)
+        {
+            <MudButton Variant="Variant.Filled" EndIcon="@Icons.Filled.NavigateNext" OnClick="GetNext" Color="Color.Primary" Class="mx-2">Следующая</MudButton>
+        }
+
+    </MudPaper>
+</MudStack> 
+
+@code {
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public string? authorNickname { get; set; }
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public int? offset { get; set; }
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public int? limit { get; set; }
+
+    string _authorNickname = "";
+    int _offset = 0;
+    int _limit = 20;
+    int _authorsCount;
+
+    private IEnumerable<AuthorListItem> authors = new List<AuthorListItem>();
+
+    private async Task ReloadData()
+    {
+        authors = await authorService.GetAuthors(_authorNickname,_offset,_limit);
+        _authorsCount = authors.Count();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            if (authorNickname != null) _authorNickname = authorNickname;
+            if (offset != null) _offset = (int)offset;
+            if (limit != null) _limit = (int)limit;
+            await ReloadData();
+        }
+        catch(Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+    }
+
+    protected async Task GetNext()
+    {
+        _offset += _limit;
+
+        //вызов GetRecypesWithFilters не работал адекватно (хз в чем проблема)
+        authors = await authorService.GetAuthors(_authorNickname,_offset,_limit);
+        _authorsCount = authors.Count();
+    }
+
+    protected async Task GetPrevious()
+    {
+        _offset -= _limit;
+        if (_offset < 0)
+            _offset = 0;
+
+        //вызов GetRecypesWithFilters не работал адекватно (хз в чем проблема)
+        authors = await authorService.GetAuthors(_authorNickname,_offset,_limit);
+        _authorsCount = authors.Count();
+    }
+}

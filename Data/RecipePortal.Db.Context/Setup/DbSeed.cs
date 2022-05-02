@@ -30,6 +30,41 @@ public static class DbSeed
             Recipes = new List<Recipe>() { }
         };
         context.Categories.Add(categ2);
+
+        var categ3 = new Category()
+        {
+            Title = "Десерты",
+            Recipes = new List<Recipe>() { }
+        };
+        context.Categories.Add(categ3);
+
+        var categ4 = new Category()
+        {
+            Title = "Салаты",
+            Recipes = new List<Recipe>() { }
+        };
+        context.Categories.Add(categ4);
+
+        var categ5 = new Category()
+        {
+            Title = "Напитки",
+            Recipes = new List<Recipe>() { }
+        };
+        context.Categories.Add(categ5);
+
+        var categ6 = new Category()
+        {
+            Title = "Приправы",
+            Recipes = new List<Recipe>() { }
+        };
+        context.Categories.Add(categ6);
+
+        var categ7 = new Category()
+        {
+            Title = "Маринады",
+            Recipes = new List<Recipe>() { }
+        };
+        context.Categories.Add(categ7);
         #endregion
 
         #region AddIngredients
@@ -77,7 +112,7 @@ public static class DbSeed
         context.Users.Add(user1);
         #endregion
 
-        #region AddResipes
+        #region AddRecipes
         var r1 = new Recipe()
         {
             Title = "Картошечка с курочкой",

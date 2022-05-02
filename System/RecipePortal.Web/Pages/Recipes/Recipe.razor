@@ -1,0 +1,277 @@
+﻿@page "/recipes/{recipeId:int}"
+
+@layout MainLayout
+
+@attribute [Authorize]
+
+@inject ISnackbar Snackbar
+@inject IAuthService authService
+@inject IAuthorService authorService
+@inject IRecipeService recipeService
+@inject IDialogService dialogService
+
+<MudPaper Elevation="0">
+    <MudStack Justify=Justify.Center AlignItems=AlignItems.Center Row="false">
+        <MudPaper Width="800px" Elevation="4" Class="mt-3 mb-3 p-3">
+            <MudStack Justify=Justify.Center AlignItems=AlignItems.Center Row="false" Spacing="2">
+                <MudPaper Width="800px" Elevation="0" Class="px-4">
+                    <MudStack Justify=Justify.FlexStart AlignItems=AlignItems.Start Row="true">
+                        <MudPaper Width="77%" Elevation="0">
+                            <MudStack Justify=Justify.FlexStart AlignItems=AlignItems.Start Row="true">
+                                <MudPaper Width="100px" Height="100px" Elevation="0">
+                                    <MudAvatar Color="Color.Primary" Style="height:100px; width:100px;">
+                                        <MudIcon Icon="@Icons.Filled.CrueltyFree" />
+                                    </MudAvatar>
+                                    @*<MudImage ObjectFit="ObjectFit.Cover" Alt="Author photo" Elevation="4" Class="rounded-lg"/>*@
+                                </MudPaper>
+
+                                <MudPaper MaxWidth="60%" Elevation="0">
+                                    <MudLink Href=@($"/authors/{author.Username}") Typo="Typo.h5">@author.Username</MudLink>
+                                    <MudText Typo="Typo.body2">@author.Name @author.Surname</MudText>
+                                    <MudText Typo="Typo.body2">@author.Email</MudText>
+                                </MudPaper>
+                            </MudStack>
+                        </MudPaper>
+                        @if (currentUserUsername != author.Username)
+                        {
+                            <MudPaper Width="23%" Class="align-self-center" Elevation="0">
+                                <MudButton Variant="Variant.Filled" 
+                                       EndIcon="@(subToAuthor ? @Icons.Filled.NotificationsOff : @Icons.Filled.NotificationAdd)" 
+                                       Color="Color.Primary" 
+                                       OnClick="((e)=>SubscriptionToAuthor())">
+                                @(subToAuthor ? "Отписаться" : "Подписаться")
+                                </MudButton>
+                            </MudPaper>
+                        }
+                    </MudStack>
+                </MudPaper>
+
+                <MudPaper Width="100%" Elevation="0">
+                    <MudDivider DividerType="DividerType.Middle" />
+                </MudPaper>
+
+                <MudPaper Width="100%" Height="600px" Elevation="1">
+                    <MudImage ObjectFit="ObjectFit.Cover" Alt="Recipe photo" Elevation="4" Class="rounded-lg" />
+                </MudPaper>
+                <MudPaper Width="100%" Height="80%" Elevation="0">
+                    <MudStack Justify=Justify.FlexStart AlignItems=AlignItems.Start Row="true">
+                        <MudPaper Width="80%" Elevation="0">
+                            <MudText Typo="Typo.h4">@recipe.Title</MudText>
+                            <MudText Typo="Typo.h6">
+                                Категория:
+                                <MudLink Href=@($"/recipes/?categoryId={@recipe.CategoryId}") Color="Color.Warning" Typo="Typo.h6"> @recipe.Category</MudLink>
+                            </MudText>
+                            <MudText Typo="Typo.body1">@recipe.Description</MudText>
+                        </MudPaper>
+                    </MudStack>
+                </MudPaper>
+
+                <MudPaper Width="100%" Elevation="0">
+                    <MudDivider DividerType="DividerType.Middle" />
+                </MudPaper>
+
+                <MudPaper Width="100%" Height="20%" Elevation="0">
+                    <MudSimpleTable Dense="true" Bordered="true" Striped="true" Style="overflow-x: auto;">
+                        <tbody>
+                            @foreach (var i in recipe.CompositionFields)
+                            {
+                                <tr>
+                                    <td>@i.IngredientName</td>
+                                    <td>@i.Quantity</td>
+
+                                </tr>
+                            }
+                        </tbody>
+                    </MudSimpleTable>
+                </MudPaper>
+
+                <MudPaper Width="100%" Height="20%" Elevation="0">
+                    <MudText Typo="Typo.body1">@recipe.Text</MudText>
+                </MudPaper>
+
+
+                <MudText Typo="Typo.h5" Class="mt-4">
+                    Комментарии
+                    <b title=@(subToComments ? "Отписаться" : "Подписаться")>
+                    <MudIconButton OnClick="((e)=>SubscriptionToComments())"  Icon="@(subToComments ? @Icons.Filled.BookmarkRemove : @Icons.Filled.BookmarkAdd)" Color="Color.Primary" Size="Size.Small" Style=""></MudIconButton>
+                    </b>
+                </MudText>
+
+                <MudPaper Width="75%" Elevation="1" Class="p-2">
+
+                    <MudPaper Elevation="0">
+                        <MudText Typo="Typo.h6">Добавить комментарий</MudText>
+                        <MudTextField @bind-Value="commentText" Label="Текст комментария" MaxLength="115" Variant="Variant.Text" Lines="3"></MudTextField>
+                        <MudButton Variant="Variant.Filled" EndIcon="@Icons.Filled.Mail" OnClick="@((e) => AddComment())" Color="Color.Primary" Class="my-2">Отправить</MudButton>
+                    </MudPaper>
+
+                </MudPaper>
+
+                <MudPaper Width="100%" Height="20%" Elevation="0">
+                    <MudStack Justify=Justify.Center AlignItems=AlignItems.Center Row="false" Spacing="2">
+                        @foreach (var c in comments)
+                        {
+                            <MudPaper Width="90%" Elevation="1" Class="p-2">
+                                <MudStack Justify=Justify.FlexStart AlignItems=AlignItems.Start Row="true">
+                                    <MudPaper Elevation="0">
+                                        <MudAvatar Color="Color.Primary">@c.AuthorNickname[0]</MudAvatar>
+                                    </MudPaper>
+                                    <MudPaper Width="600px" Elevation="0">
+                                        <MudLink Href=@($"/authors/{author.Username}") Typo="Typo.h6">@c.AuthorNickname</MudLink>
+                                        <MudTextField @bind-Value="@c.CommentText" Variant="Variant.Text" Lines="3" ReadOnly="true"/>
+                                    </MudPaper>
+                                
+                                <MudStack Justify=Justify.FlexStart AlignItems=AlignItems.Center Row="true">
+                                    <MudPaper Elevation="0" Class="mr-2 mt-3">
+                                        @if(currentUserUsername.Equals(c.AuthorNickname))
+                                        {
+                                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="((e)=>EditComment(c))"></MudIconButton>
+                                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" OnClick="((e)=>DeleteComment(c))"></MudIconButton>
+                                        }
+                                    </MudPaper>
+                                </MudStack>
+                                </MudStack>
+                            </MudPaper>
+
+
+                        }
+                    </MudStack>
+                </MudPaper>
+
+                <MudPaper Elevation="0" Class="mb-4">
+                    @if (_commentsDownloaded == _commentsLimit)
+                    {
+                        <MudButton Variant="Variant.Filled" EndIcon="@Icons.Filled.Add" OnClick="GetMoreComments" Color="Color.Primary" Class="mx-2">Загрузить еще</MudButton>
+                    }
+
+                </MudPaper>
+            </MudStack>
+        </MudPaper>
+    </MudStack>
+</MudPaper>
+
+@code {
+    [Parameter]
+    public int recipeId { get; set; }
+
+    string commentText = "";
+    int _commentsOffset = 0;
+    int _commentsLimit = 10;
+    int _commentsDownloaded = 0;
+    string currentUserUsername = "";
+    bool subToAuthor = false;
+    bool subToComments = false;
+
+    private RecipeListItem recipe = new RecipeListItem()
+        {
+            CompositionFields = new List<CompositionFieldItem>()
+        };
+
+    private AuthorListItem author = new AuthorListItem();
+    private AllSubscriptions subscriptions = new AllSubscriptions();
+    private List<CommentListItem> comments = new List<CommentListItem>();
+    SubscriptionToAuthorItem subscriptionToAuthor;
+    SubscriptionToCommentsItem subscriptionToComments;
+
+    private async Task ReloadData()
+    {
+        recipe = await recipeService.GetRecipe(recipeId);
+        author = await authorService.GetAuthor(recipe.Author);
+        comments = await recipeService.GetComments(recipeId, _commentsOffset, _commentsLimit);
+        _commentsDownloaded = comments.Count();
+        _commentsOffset += _commentsLimit;
+
+        subscriptions = await authorService.GetSubscriptions();
+        subscriptionToAuthor = subscriptions.SubscriptionsToAuthors.FirstOrDefault(x => x.Author.Username.Equals(this.author.Username),null);
+        if (subscriptionToAuthor != null)
+            subToAuthor = true;
+        subscriptionToComments = subscriptions.SubscriptionsToComments.FirstOrDefault(x => x.Recipe.RecipeId.Equals(this.recipeId),null);
+        if (subscriptionToComments != null)
+            subToComments = true;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            currentUserUsername = await authService.GetCurrentUsername();
+            await ReloadData();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+    }
+
+    public async Task SubscriptionToAuthor()
+    {
+        if (subToAuthor)
+        {
+            await authorService.DeleteSubscriptionToAuthor(subscriptionToAuthor.SubscriptionId);
+            subscriptionToAuthor = null;
+            subToAuthor = !subToAuthor;
+        }
+        else
+        {
+            subscriptionToAuthor = await authorService.AddSubscriptionToAuthor(author.Username);    
+            subToAuthor = !subToAuthor;
+        }
+    }
+
+    public async Task SubscriptionToComments()
+    {
+        if (subToComments)
+        {
+            await authorService.DeleteSubscriptionToComments(subscriptionToComments.SubscriptionId);
+            subscriptionToComments = null;
+            subToComments = !subToComments;
+        }
+        else
+        {
+            subscriptionToComments = await authorService.AddSubscriptionToComments(recipeId);    
+            subToComments = !subToComments;
+        }
+    }
+
+    private async Task GetMoreComments()
+    {
+
+        var newComments = await recipeService.GetComments(recipeId, _commentsOffset, _commentsLimit);
+        _commentsDownloaded = newComments.Count();
+        _commentsOffset += _commentsLimit;
+
+        comments.AddRange(newComments);
+    }
+
+    private async Task AddComment()
+    {
+        CommentRequest request = new CommentRequest() { CommentText = commentText };
+        commentText = "";
+        var comment = await recipeService.AddComment(recipeId, request);
+        comments.Insert(0,comment);
+        _commentsOffset += 1;
+    }
+
+    private async Task EditComment(CommentListItem comment)
+    {
+        var parameters = new DialogParameters();
+        parameters.Add("comment", comment);
+
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Large, FullWidth = true };
+        var dialog = dialogService.Show<UpdateCommentDialog>("Edit book", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Cancelled)
+        {
+            var request = new CommentRequest() { CommentText = ((UpdateCommentDialog)dialog.Dialog).comment.CommentText };
+            comments[comments.IndexOf(comment)] = await recipeService.EditComment(recipeId,comment.Id, request);
+        }
+    }
+
+    private async Task DeleteComment(CommentListItem comment)
+    {
+        await recipeService.DeleteComment(recipeId, comment.Id);
+        comments.Remove(comment);
+        _commentsOffset -= 1;
+    }
+}

@@ -1,4 +1,4 @@
-    namespace RecipePortal.UserAccountService;
+namespace RecipePortal.UserAccountService;
 
 using AutoMapper;
 using Microsoft.AspNetCore.Identity;
@@ -8,6 +8,7 @@ using RecipePortal.Common.Validator;
 using RecipePortal.Db.Context.Context;
 using RecipePortal.Db.Entities;
 using RecipePortal.RabbitMqService;
+using RecipePortal.RecipeService.Models;
 using RecipePortal.UserAccountService.Models;
 
 public class UserAccountService : IUserAccountService
@@ -25,6 +26,35 @@ public class UserAccountService : IUserAccountService
         this.userManager = userManager;
         this.rabbitMqTask = rabbitMqTask;
         this.registerUserAccountModelValidator = registerUserAccountModelValidator;
+    }
+
+    public async Task<IEnumerable<UserAccountModel>> GetUsers(string authorNickname, int offset, int limit)
+    {
+        using var context = await contextFactory.CreateDbContextAsync();
+
+        var users = userManager.Users;
+        if (authorNickname != "")
+            users = users.Where(x => x.UserName.Contains(authorNickname));
+
+        users = users
+            .Skip(offset)
+            .Take(limit);
+
+        var data = (await users.ToListAsync()).Select(user => mapper.Map<UserAccountModel>(user)).ToList();
+
+        return data;
+    }
+
+    public async Task<UserAccountModel> GetUser(string authorNickname)
+    {
+        using var context = await contextFactory.CreateDbContextAsync();
+
+        var user = userManager.Users.FirstOrDefault(x => x.UserName.Equals(authorNickname))
+            ?? throw new ProcessException($"The user was not found");
+
+        var data = mapper.Map<UserAccountModel>(user);
+
+        return data;
     }
 
     public async Task<UserAccountModel> Create(RegisterUserAccountModel model)
@@ -67,23 +97,42 @@ public class UserAccountService : IUserAccountService
     // .. “акже здесь можно разместить методы дл€ изменени€ данных учетной записи,
     // восстановлени€ и смены парол€, подтверждени€ электронной почты, установки телефона и его подтверждени€ и т.д.
 
-    public async Task AddSubscriptionToAuthor(Guid subscriber, string autorNickname)
+    public async Task<SubscriptionToAuthorModel> AddSubscriptionToAuthor(Guid subscriber, string authorNickname)
     {
         using var context = await contextFactory.CreateDbContextAsync();
 
-        SubscriptionToAuthorModel model = new SubscriptionToAuthorModel()
+        AddSubscriptionToAuthorModel model = new AddSubscriptionToAuthorModel()
         {
             SubscriberId = subscriber,
-            AuthorId = userManager.FindByNameAsync(autorNickname).Result.Id
+            AuthorId = userManager.FindByNameAsync(authorNickname).Result.Id
         };
 
         var subscription = mapper.Map<SubscriptionToAuthor>(model);
 
         await context.SubscriptionsToAuthor.AddAsync(subscription);
         context.SaveChanges();
+
+        var response = mapper.Map<SubscriptionToAuthorModel>(context.SubscriptionsToAuthor.Include(x => x.Author).First(x=>x.Id.Equals(subscription.Id)));
+        return response;
     }
 
-    public async Task AddSubscriptionToCategory(SubscriptionToCategoryModel model)
+    public async Task DeleteSubscriptionToAuthor(DeleteSubscriptionModel model)
+    {
+        using var context = await contextFactory.CreateDbContextAsync();
+
+        var subscription = await context.SubscriptionsToAuthor.FirstOrDefaultAsync(x => x.Id.Equals(model.SubscriptionId))
+            ?? throw new ProcessException($"The subscription does not exist");
+
+        if (subscription.SubscriberId == model.Subscriber)   //проверка, что удал€етс€ сво€ подписка, а не чужа€
+        {
+            context.SubscriptionsToAuthor.Remove(subscription);
+            context.SaveChanges();
+        }
+        else
+            throw new ProcessException($"The subscription isn't yours");
+    }
+
+    public async Task<SubscriptionToCategoryModel> AddSubscriptionToCategory(AddSubscriptionToCategoryModel model)
     {
         using var context = await contextFactory.CreateDbContextAsync();
 
@@ -91,18 +140,84 @@ public class UserAccountService : IUserAccountService
 
         await context.SubscriptionsToCategory.AddAsync(subscription);
         context.SaveChanges();
+
+        var response = mapper.Map<SubscriptionToCategoryModel>(context.SubscriptionsToCategory.Include(x => x.Category).First(x => x.Id.Equals(subscription.Id)));
+        return response;
     }
 
-    public async Task AddSubscriptionToComments(SubscriptionToCommentsModel model)
+    public async Task DeleteSubscriptionToCategory(DeleteSubscriptionModel model)
     {
         using var context = await contextFactory.CreateDbContextAsync();
-        
+
+        var subscription = await context.SubscriptionsToCategory.FirstOrDefaultAsync(x => x.Id.Equals(model.SubscriptionId))
+            ?? throw new ProcessException($"The subscription does not exist");
+
+        if (subscription.SubscriberId == model.Subscriber)   //проверка, что удал€етс€ сво€ подписка, а не чужа€
+        {
+            context.SubscriptionsToCategory.Remove(subscription);
+            context.SaveChanges();
+        }
+        else
+            throw new ProcessException($"The subscription isn't yours");
+    }
+
+    public async Task<SubscriptionToCommentsModel> AddSubscriptionToComments(AddSubscriptionToCommentsModel model)
+    {
+        using var context = await contextFactory.CreateDbContextAsync();
+
         var subscription = mapper.Map<SubscriptionToComments>(model);
 
         await context.SubscriptionsToComments.AddAsync(subscription);
         context.SaveChanges();
+
+        var response = mapper.Map<SubscriptionToCommentsModel>(context.SubscriptionsToComments.Include(x => x.Recipe).First(x => x.Id.Equals(subscription.Id)));
+        return response;
     }
 
+    public async Task DeleteSubscriptionToComments(DeleteSubscriptionModel model)
+    {
+        using var context = await contextFactory.CreateDbContextAsync();
 
+        var subscription = await context.SubscriptionsToComments.FirstOrDefaultAsync(x => x.Id.Equals(model.SubscriptionId))
+            ?? throw new ProcessException($"The subscription does not exist");
+
+        if (subscription.SubscriberId == model.Subscriber)   //проверка, что удал€етс€ сво€ подписка, а не чужа€
+        {
+            context.SubscriptionsToComments.Remove(subscription);
+            context.SaveChanges();
+        }
+        else
+            throw new ProcessException($"The subscription isn't yours");
+    }
+
+    public async Task<AllSubscriptionsModel> GetSubscriptions(Guid user)
+    {
+        using var context = await contextFactory.CreateDbContextAsync();
+
+        AllSubscriptionsModel allSubscriptions = new AllSubscriptionsModel();
+
+        var subToAuthors = context
+            .SubscriptionsToAuthor
+            .Where(x => x.SubscriberId.Equals(user))
+            .Include(x => x.Author);
+
+        var subToCategories = (context
+            .SubscriptionsToCategory
+            .Where(x => x.SubscriberId.Equals(user))
+            .Include(x => x.Category));
+
+        var subToComments = (context
+            .SubscriptionsToComments
+            .Where(x => x.SubscriberId.Equals(user))
+            .Include(x => x.Recipe).ThenInclude(x => x.CompositionFields).ThenInclude(x => x.Ingredient)
+            .Include(x => x.Recipe).ThenInclude(x => x.Author)
+            .Include(x => x.Recipe).ThenInclude(x => x.Category));
+
+        allSubscriptions.SubscriptionsToAuthors = (await subToAuthors.ToListAsync()).Select(subToAuthors => mapper.Map<SubscriptionToAuthorModel>(subToAuthors)).ToList();
+        allSubscriptions.SubscriptionsToCategories = (await subToCategories.ToListAsync()).Select(subToCategories => mapper.Map<SubscriptionToCategoryModel>(subToCategories)).ToList();
+        allSubscriptions.SubscriptionsToComments = (await subToComments.ToListAsync()).Select(subToComments => mapper.Map<SubscriptionToCommentsModel>(subToComments)).ToList();
+
+        return allSubscriptions;
+    }
 
 }

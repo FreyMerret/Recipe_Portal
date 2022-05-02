@@ -40,3 +40,13 @@ services:
       - recipeportal_redis
       - recipeportal_rabbitmq
 
+  recipeportal_web:
+    image: ${DOCKER_REGISTRY-}recipeportalweb
+    build:
+      context: .
+      dockerfile: System/RecipePortal.Web/Dockerfile
+    depends_on:
+      - recipeportal_sqlserver
+      - recipeportal_redis
+      - recipeportal_rabbitmq
+

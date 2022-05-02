@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using RecipePortal.API.Controllers.Recipes.Models;
 using RecipePortal.UserAccountService.Models;
 
 namespace RecipePortal.API.Controllers.UserAccounts.Models;

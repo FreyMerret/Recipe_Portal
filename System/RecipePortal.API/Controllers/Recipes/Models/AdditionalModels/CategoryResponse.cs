@@ -5,7 +5,7 @@ namespace RecipePortal.API.Controllers.Recipes.Models;
 
 public class CategoryResponse
 {
-    public string CategoryId { get; set; }
+    public int CategoryId { get; set; }
     public string CategoryName { get; set; }
 }
 

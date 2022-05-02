@@ -69,6 +69,7 @@ public class RecipeService : IRecipeService
             recipes = recipes.Where(x => x.Author.UserName.Equals(authorNickname));
 
         recipes = recipes
+            .OrderByDescending(o => o.Id)
             .Skip(Math.Max(offset, 0))
             .Take(Math.Min(limit, 100));
 
@@ -165,6 +166,7 @@ public class RecipeService : IRecipeService
 
         comments = comments
             .Where(s => s.RecipeId.Equals(recipeId))
+            .OrderByDescending(o => o.Id)
             .Skip(Math.Max(offset, 0))
             .Take(Math.Min(limit, 100));
 
@@ -308,7 +310,9 @@ public class RecipeService : IRecipeService
     {
         using var context = await contextFactory.CreateDbContextAsync();
 
-        var ingredients = context.Ingredients;
+        var ingredients = context
+            .Ingredients
+            .OrderBy(o => o.Name);
 
         var data = (await ingredients.ToListAsync()).Select(ingredient => mapper.Map<IngredientModel>(ingredient)).ToList();
 

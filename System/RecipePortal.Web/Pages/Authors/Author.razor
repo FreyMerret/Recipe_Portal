@@ -1,0 +1,153 @@
+﻿@page "/authors/{authorNickname}"
+@layout MainLayout
+
+@attribute [Authorize]
+
+@inject ISnackbar Snackbar
+@inject IAuthService authService
+@inject IAuthorService authorService
+@inject IRecipeService recipeService
+
+<MudStack Justify=Justify.Center AlignItems=AlignItems.Center Row="false">
+
+    <MudPaper Width="800px" Elevation="4" Class="mt-3 mb-3 p-3">
+        <MudStack Justify=Justify.FlexStart AlignItems=AlignItems.Start Row="true">
+            <MudPaper Width="77%" Elevation="0">
+                <MudStack Justify=Justify.FlexStart AlignItems=AlignItems.Start Row="true">                
+                    <MudPaper Width="100px" Height="100px" Elevation="0">
+                        <MudAvatar Color="Color.Primary" Style="height:100px; width:100px;"> 
+                            <MudIcon Icon="@Icons.Filled.CrueltyFree" />
+                        </MudAvatar>
+                        @*<MudImage ObjectFit="ObjectFit.Cover" Alt="Author photo" Elevation="4" Class="rounded-lg"/>*@
+                    </MudPaper>
+                
+                    <MudPaper MaxWidth="60%" Elevation="0">
+                        <MudText Typo="Typo.h5">@author.Username</MudText>
+                        <MudText Typo="Typo.body2">@author.Name @author.Surname</MudText>
+                        <MudText Typo="Typo.body2">@author.Email</MudText>
+                    </MudPaper>
+                </MudStack>
+            </MudPaper>
+            @if (currentUserUsername != author.Username)
+            {
+                <MudPaper Width="23%" Elevation="0" Class="align-self-center">
+                    <MudButton Variant="Variant.Filled" 
+                               EndIcon="@(subToAuthor ? @Icons.Filled.NotificationsOff : @Icons.Filled.NotificationAdd)" 
+                               Color="Color.Primary" 
+                               OnClick="((e)=>Subscribe())">
+                    @(subToAuthor ? "Отписаться" : "Подписаться")
+                    </MudButton>
+                </MudPaper>
+            }
+        </MudStack>
+    </MudPaper>
+
+    <MudPaper Width="800px" Elevation="4" Class="mt-3 mb-3 p-3">
+        <MudStack Justify=Justify.Center AlignItems=AlignItems.Center Row="false" Spacing="2">
+
+            <MudPaper Width="100%" Elevation="0">
+                <MudText Typo="Typo.h3" Align="Align.Center" Class="mb-4" >Рецепты автора</MudText>
+                
+                <MudPaper Width="100%" Elevation="0">
+                    <MudDivider DividerType="DividerType.Middle"/>
+                </MudPaper>
+
+                @foreach(var r in recipes)
+                {
+                    <MudPaper Width="100%" Elevation="2" Class="mb-4" >
+                        <MudStack Justify=Justify.FlexStart AlignItems=AlignItems.Start Row="true">
+                        
+                            <MudPaper Width="200px" Height="200px" Elevation="1">
+                                <MudImage ObjectFit="ObjectFit.Cover" Alt="Recipe photo" Elevation="4" Class="rounded-lg"/>
+                            </MudPaper>
+                        
+                            <MudPaper MaxWidth="70%" Elevation="0">
+                                <MudLink Href=@($"/recipes/{r.RecipeId}") Typo="Typo.h4" Class="mb-2">@r.Title</MudLink>
+                                <MudText Typo="Typo.body2">@r.Description</MudText>
+                            </MudPaper>
+                        
+                        </MudStack>
+                    </MudPaper>
+                }
+
+            </MudPaper>
+
+            @if (recipeCount == 0)
+            {
+                <MudPaper Elevation="0">
+                    <MudText Typo="Typo.h5">У этого автора еще нет рецептов</MudText>
+                </MudPaper>
+            }
+
+            @if (recipeCount == 10)
+            {
+                <MudPaper Elevation="0" Class="mt-n3">
+                    <MudButton Href=@($"/recipes/?authorNickname={author.Username}") Variant="Variant.Filled" EndIcon="@Icons.Filled.AddCircleOutline" Color="Color.Primary">Еще</MudButton>
+                </MudPaper>
+            }
+
+        </MudStack> 
+    </MudPaper>
+</MudStack> 
+
+@code {
+    [Parameter]
+    public string authorNickname { get; set; }
+
+    private AuthorListItem author = new AuthorListItem();
+    private IEnumerable<RecipeListItem> recipes = new List<RecipeListItem>();
+    private AllSubscriptions subscriptions = new AllSubscriptions();
+    private SubscriptionToAuthorItem subscription;
+
+    int recipeCount = 0;
+    bool subToAuthor = false;
+    string currentUserUsername = "";
+    
+
+    private async Task ReloadData()
+    {
+        try
+        {
+            author = await authorService.GetAuthor(authorNickname);
+            recipes = await recipeService.GetRecipes("",0,authorNickname,0, 10);
+            recipeCount = recipes.Count();
+            subscriptions = await authorService.GetSubscriptions();
+            subscription = subscriptions.SubscriptionsToAuthors.FirstOrDefault(x => x.Author.Username.Equals(this.author.Username),null);
+            if (subscription != null)
+                subToAuthor = true;
+        }
+        catch(Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            currentUserUsername = await authService.GetCurrentUsername();
+            await ReloadData();
+        }
+        catch(Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+    }
+
+    public async Task Subscribe()
+    {
+        if (subToAuthor)
+        {
+            await authorService.DeleteSubscriptionToAuthor(subscription.SubscriptionId);
+            subscription = null;
+            subToAuthor = !subToAuthor;
+        }
+        else
+        {
+            subscription = await authorService.AddSubscriptionToAuthor(author.Username);    
+            subToAuthor = !subToAuthor;
+        }
+    }
+}

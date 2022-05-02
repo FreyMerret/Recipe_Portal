@@ -5,7 +5,7 @@ namespace RecipePortal.RecipeService.Models;
 
 public class IngredientModel
 {
-    public string IngredientId { get; set; }
+    public int IngredientId { get; set; }
     public string IngredientName { get; set; }
 }
 

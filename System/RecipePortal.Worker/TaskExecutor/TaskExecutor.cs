@@ -83,7 +83,7 @@ public class TaskExecutor : ITaskExecutor
 
                 foreach (var email in mailingList)
                 {
-                    await service.SendEmailAsync(email, "New recipe in Recipe Portal", $"You can find new recipe at http://localhost:21430/api/v1/resipes/{data}");
+                    await service.SendEmailAsync(email, "New recipe in Recipe Portal", $"You can find new recipe at http://localhost:20003/recipes/{recipe.Id}");
                 };
 
             }));
@@ -108,7 +108,7 @@ public class TaskExecutor : ITaskExecutor
 
                 foreach (var email in mailingList)
                 {
-                    await service.SendEmailAsync(email, "New recipe in Recipe Portal", $"You can find new comment at http://localhost:21430/api/v1/resipes/{recipeId}");
+                    await service.SendEmailAsync(email, "New comment added", $"You can find new comment at http://localhost:20003/recipes/{recipeId}");
                 };
 
             }));

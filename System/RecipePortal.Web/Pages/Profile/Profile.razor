@@ -1,0 +1,296 @@
+﻿@page "/profile"
+@layout MainLayout
+
+@attribute [Authorize]
+
+@inject ISnackbar Snackbar
+@inject IAuthService authService
+@inject IAuthorService authorService
+@inject IRecipeService recipeService
+@inject IDialogService dialogService
+
+<MudStack Justify=Justify.Center AlignItems=AlignItems.Center Row="false" >
+
+    @*Информация о пользователе*@
+    <MudPaper Width="800px" Elevation="4" Class="mt-3 mb-3 p-3">
+        <MudStack Justify=Justify.FlexStart AlignItems=AlignItems.Start Row="true">
+            <MudPaper Width="80%" Elevation="0">
+                <MudStack Justify=Justify.FlexStart AlignItems=AlignItems.Start Row="true">                
+                    <MudPaper Width="100px" Height="100px" Elevation="0">
+                        <MudAvatar Color="Color.Primary" Style="height:100px; width:100px;"> 
+                            <MudIcon Icon="@Icons.Filled.CrueltyFree" />
+                        </MudAvatar>
+                        @*<MudImage ObjectFit="ObjectFit.Cover" Alt="Author photo" Elevation="4" Class="rounded-lg"/>*@
+                    </MudPaper>
+                
+                    <MudPaper MaxWidth="60%" Elevation="0">
+                        <MudText Typo="Typo.h5">@author.Username</MudText>
+                        <MudText Typo="Typo.body2">@author.Name @author.Surname</MudText>
+                        <MudText Typo="Typo.body2">@author.Email</MudText>
+                    </MudPaper>
+                </MudStack>
+            </MudPaper>
+            <MudPaper Width="20%" Class="align-self-center">
+                <MudButton Variant="Variant.Filled" EndIcon="@Icons.Filled.ChangeCircle" Color="Color.Primary">Изменить данные</MudButton>
+            </MudPaper>
+        </MudStack>
+    </MudPaper>
+
+    @*Информация о рецептах пользователя*@
+    <MudPaper Width="800px" Elevation="4" Class="mt-3 mb-3 p-3">
+        <MudExpansionPanel>
+            <TitleContent>
+                <div class="d-flex">
+                    <MudText Typo="Typo.h4" Align="Align.Center" Class="mb-4" >
+                        Мои рецепты <MudIconButton OnClick="(()=>AddRecipe())" Icon="@Icons.Material.Filled.Add" Size="Size.Small"></MudIconButton>
+                    </MudText>
+                </div>
+            </TitleContent>
+            <ChildContent>  
+                @foreach(var r in recipes)
+                {
+                    <MudPaper Width="100%" Elevation="2" Class="mb-4 mt-1" >
+                        <MudStack Justify=Justify.SpaceBetween AlignItems=AlignItems.Start Row="true">
+                            <MudStack Justify=Justify.FlexStart AlignItems=AlignItems.Start Row="true">                            
+                                <MudPaper Width="200px" Height="200px" Elevation="1">
+                                    <MudImage ObjectFit="ObjectFit.Cover" Alt="Recipe photo" Elevation="4" Class="rounded-lg"/>
+                                </MudPaper>
+                            
+                                <MudPaper MaxWidth="65%" Elevation="0">
+                                    <MudLink Href=@($"/recipes/{r.RecipeId}") Typo="Typo.h4" Class="mb-2">@r.Title</MudLink>
+                                    <MudText Typo="Typo.body2">@r.Description</MudText>
+                                </MudPaper>
+                            </MudStack>
+
+                            <MudStack Justify=Justify.FlexEnd AlignItems=AlignItems.End Row="true">
+                                <MudPaper Elevation="0" Class="mr-2 mt-2">
+                                    <MudStack Justify=Justify.FlexEnd AlignItems=AlignItems.Start Row="false">
+                                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small"></MudIconButton>
+                                        <MudIconButton OnClick="(()=>DeleteRecipe(r))" Icon="@Icons.Material.Filled.Delete" Size="Size.Small"></MudIconButton>
+                                    </MudStack>
+                                </MudPaper>
+                            </MudStack>
+                        </MudStack>
+                    </MudPaper>
+                }
+                @if(recipes.Count == 0)
+                {
+                    <MudText Typo="Typo.h6" Align="Align.Center" Class="my-4" >
+                        Пока здесь ничего нет. Вы можете создать новый рецепт при помощи кнопки выше.
+                    </MudText>
+                }
+            </ChildContent>
+        </MudExpansionPanel>
+    </MudPaper>
+
+    @*Информация о подписках пользователя*@
+    <MudPaper Width="800px" Elevation="4" Class="mt-3 mb-3 p-3">
+        <MudExpansionPanel>
+            <TitleContent>
+                <div class="d-flex">
+                    <MudText Typo="Typo.h4" Align="Align.Center" Class="mb-4" >Мои подписки</MudText>
+                </div>
+            </TitleContent>
+            <ChildContent>   
+
+                @*Подписки на авторов*@
+                <MudPaper Width="100%" Elevation="2" Class="mb-2 mt-1">
+                    <MudExpansionPanel>
+                        <TitleContent>
+                            <div class="d-flex">
+                                <MudText Typo="Typo.h5" Align="Align.Center" Class="mb-4" >Подписки на авторов</MudText>
+                            </div>
+                        </TitleContent>
+                        <ChildContent>  
+                            @if(subscriptions.SubscriptionsToAuthors != null)
+                            @foreach(var s in subscriptions.SubscriptionsToAuthors)
+                            {
+                                <MudPaper Width="100%" Elevation="0" Class="mb-4 mt-1" >
+                                    <MudStack Justify=Justify.SpaceBetween AlignItems=AlignItems.Start Row="true">
+                                        <MudStack Justify=Justify.FlexStart AlignItems=AlignItems.Center Row="true">                            
+                                            <MudPaper Elevation="0" Class="ml-2">
+                                                <MudAvatar Color="Color.Primary">@s.Author.Username[0]</MudAvatar>
+                                            </MudPaper>
+                                        
+                                            <MudPaper MaxWidth="70%" Elevation="0">
+                                                <MudLink Href=@($"/authors/{s.Author.Username}") Typo="Typo.h5" Class="mb-2">@s.Author.Username</MudLink>
+                                                <MudText Typo="Typo.body2">@s.Author.Name @s.Author.Surname</MudText>
+                                            </MudPaper>
+                                        </MudStack>
+
+                                        <MudStack Justify=Justify.FlexEnd AlignItems=AlignItems.Center Row="true">
+                                            <MudPaper Elevation="0" Class="mr-2 mt-3">
+                                                <MudIconButton OnClick="(()=>UnsubscribeFromAuthor(s))" Icon="@Icons.Material.Filled.Delete" Size="Size.Small"></MudIconButton>
+                                            </MudPaper>
+                                        </MudStack>
+                                    </MudStack>
+                                </MudPaper>
+                            }
+                            @if(subscriptions.SubscriptionsToAuthors.Count() == 0)
+                            {
+                                <MudText Typo="Typo.h6" Align="Align.Center" Class="my-4" >
+                                    Пока здесь ничего нет. Вы можете подписаться на автора на его странице или на странице одного из его рецептов.
+                                </MudText>
+                            }
+                        </ChildContent>
+                    </MudExpansionPanel>
+                </MudPaper>
+
+                @*Подписки на категории*@
+                <MudPaper Width="100%" Elevation="2" Class="mb-2">
+                    <MudExpansionPanel>
+                        <TitleContent>
+                            <div class="d-flex">
+                                <MudText Typo="Typo.h5" Align="Align.Center" Class="mb-4" >Подписки на категории</MudText>
+                            </div>
+                        </TitleContent>
+                        <ChildContent>  
+                            @foreach(var s in subscriptions.SubscriptionsToCategories)
+                            {
+                                <MudPaper Width="100%" Elevation="0" Class="mb-4 mt-1" >
+                                    <MudStack Justify=Justify.SpaceBetween AlignItems=AlignItems.Start Row="true">
+                                        <MudStack Justify=Justify.FlexStart AlignItems=AlignItems.Start Row="true">                            
+                                        
+                                            <MudPaper Width="550px" Elevation="0" Class="m-2 mt-3">
+                                                <MudLink Href=@($"/recipes/?categoryId={s.Category.CategoryId}") Typo="Typo.h5" Class="mb-2">@s.Category.CategoryName</MudLink>
+                                            </MudPaper>
+
+                                        </MudStack>
+
+                                        <MudStack Justify=Justify.FlexEnd AlignItems=AlignItems.End Row="true">
+                                            <MudPaper Elevation="0" Class="m-3">
+                                                <MudIconButton OnClick="(()=>UnsubscribeFromCategory(s))" Icon="@Icons.Material.Filled.Delete" Size="Size.Small"></MudIconButton>
+                                            </MudPaper>
+                                        </MudStack>
+                                    </MudStack>
+                                </MudPaper>
+                            }
+                            @if(subscriptions.SubscriptionsToCategories.Count() == 0)
+                            {
+                                <MudText Typo="Typo.h6" Align="Align.Center" Class="my-4" >
+                                    Пока здесь ничего нет. Вы можете подписаться на категорию в разделе "Категории".
+                                </MudText>
+                            }
+                        </ChildContent>
+                    </MudExpansionPanel>
+                </MudPaper>
+
+                @*Подписки на комментарии к рецептам*@
+                <MudPaper Width="100%" Elevation="2">
+                    <MudExpansionPanel>
+                        <TitleContent>
+                            <div class="d-flex">
+                                <MudText Typo="Typo.h5" Align="Align.Center" Class="mb-4" >Подписки на комментарии рецептов</MudText>
+                            </div>
+                        </TitleContent>
+                        <ChildContent>  
+                            @foreach(var s in subscriptions.SubscriptionsToComments)
+                            {
+                                <MudPaper Width="100%" Elevation="0" Class="mb-4 mt-1" >
+                                    <MudStack Justify=Justify.SpaceBetween AlignItems=AlignItems.Start Row="true">
+                                        <MudStack Justify=Justify.FlexStart AlignItems=AlignItems.Start Row="true">                            
+                                            <MudPaper Width="100px" Height="100px" Elevation="1">
+                                                <MudImage ObjectFit="ObjectFit.Cover" Alt="Recipe photo" Elevation="4" Class="rounded-lg"/>
+                                            </MudPaper>
+                                        
+                                            <MudPaper MaxWidth="500px" Elevation="0">
+                                                <MudLink Href=@($"/recipes/{s.Recipe.RecipeId}") Typo="Typo.h5" Class="mb-2">@s.Recipe.Title</MudLink>
+                                                <MudText Typo="Typo.body2">@s.Recipe.Description</MudText>
+                                            </MudPaper>
+                                        </MudStack>
+
+                                        <MudStack Justify=Justify.FlexEnd AlignItems=AlignItems.End Row="true">
+                                            <MudPaper Elevation="0" Class="mr-2 mt-2">
+                                                <MudIconButton OnClick="(()=>UnsubscribeFromComments(s))" Icon="@Icons.Material.Filled.Delete" Size="Size.Small"></MudIconButton>
+                                            </MudPaper>
+                                        </MudStack>
+                                    </MudStack>
+                                </MudPaper>
+                            }
+                            @if(subscriptions.SubscriptionsToComments.Count() == 0)
+                            {
+                                <MudText Typo="Typo.h6" Align="Align.Center" Class="my-4" >
+                                    Пока здесь ничего нет. Вы можете подписаться на новые комментари к рецепту на странице рецепта.
+                                </MudText>
+                            }
+                        </ChildContent>
+                    </MudExpansionPanel>
+                </MudPaper>
+
+            </ChildContent>
+        </MudExpansionPanel>
+    </MudPaper>
+</MudStack> 
+
+@code {
+    string currentUserUsername = "";
+
+    private AuthorListItem author = new AuthorListItem();
+    private List<RecipeListItem> recipes = new List<RecipeListItem>();
+    private AllSubscriptions subscriptions = new AllSubscriptions()
+    {
+        SubscriptionsToAuthors = new List<SubscriptionToAuthorItem>(),
+        SubscriptionsToCategories = new List<SubscriptionToCategoryItem>(),
+        SubscriptionsToComments = new List<SubscriptionToCommentsItem>()
+    };
+
+    private async Task ReloadData()
+    {
+        author = await authorService.GetAuthor(currentUserUsername);
+        recipes = await recipeService.GetRecipes("",0,currentUserUsername,0, 1000);
+        subscriptions = await authorService.GetSubscriptions();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            currentUserUsername = await authService.GetCurrentUsername();
+            await ReloadData();
+        }
+        catch(Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+    }
+
+    private async Task AddRecipe()
+    {
+        var parameters = new DialogParameters();
+
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Medium, FullWidth = true };
+        var dialog = dialogService.Show<AddRecipeDialog>("Добавление рецепта", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Cancelled)
+        {
+            var request = ((AddRecipeDialog)dialog.Dialog).model;
+            recipes.Add(await recipeService.AddRecipe(request));
+        }
+    }
+
+    private async Task DeleteRecipe(RecipeListItem recipe)
+    {
+        await recipeService.DeleteRecipe(recipe.RecipeId);
+        recipes.Remove(recipe);
+    }
+
+    private async Task UnsubscribeFromAuthor(SubscriptionToAuthorItem subscription)
+    {
+        await authorService.DeleteSubscriptionToAuthor(subscription.SubscriptionId);
+        subscriptions.SubscriptionsToAuthors.Remove(subscription);
+    }
+
+    private async Task UnsubscribeFromCategory(SubscriptionToCategoryItem subscription)
+    {
+        await authorService.DeleteSubscriptionToCategory(subscription.SubscriptionId);
+        subscriptions.SubscriptionsToCategories.Remove(subscription);
+    }
+
+    private async Task UnsubscribeFromComments(SubscriptionToCommentsItem subscription)
+    {
+        await authorService.DeleteSubscriptionToComments(subscription.SubscriptionId);
+        subscriptions.SubscriptionsToComments.Remove(subscription);
+    }
+}
+

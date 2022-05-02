@@ -49,7 +49,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RecipePortal.EmailService",
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RecipePortal.RabbitMqService", "Services\RecipePortal.RabbitMqService\RecipePortal.RabbitMqService.csproj", "{8735F1AC-EB4A-41C8-BA3D-FD6A1BE7DBF1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RecipePortal.UserAccountService", "Services\RecipePortal.UserAccountService\RecipePortal.UserAccountService.csproj", "{396EB801-CD03-4E1D-85CA-B62644493424}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RecipePortal.UserAccountService", "Services\RecipePortal.UserAccountService\RecipePortal.UserAccountService.csproj", "{396EB801-CD03-4E1D-85CA-B62644493424}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RecipePortal.Web", "System\RecipePortal.Web\RecipePortal.Web.csproj", "{26F9D2F5-232C-4F92-9DF3-C8C24B5E4307}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -105,6 +107,10 @@ Global
 		{396EB801-CD03-4E1D-85CA-B62644493424}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{396EB801-CD03-4E1D-85CA-B62644493424}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{396EB801-CD03-4E1D-85CA-B62644493424}.Release|Any CPU.Build.0 = Release|Any CPU
+		{26F9D2F5-232C-4F92-9DF3-C8C24B5E4307}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{26F9D2F5-232C-4F92-9DF3-C8C24B5E4307}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{26F9D2F5-232C-4F92-9DF3-C8C24B5E4307}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{26F9D2F5-232C-4F92-9DF3-C8C24B5E4307}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -122,6 +128,7 @@ Global
 		{0F557129-A430-47CD-8967-7FEFA0D94B2D} = {BE4F53F1-3292-4897-9733-A05BD453A22A}
 		{8735F1AC-EB4A-41C8-BA3D-FD6A1BE7DBF1} = {BE4F53F1-3292-4897-9733-A05BD453A22A}
 		{396EB801-CD03-4E1D-85CA-B62644493424} = {BE4F53F1-3292-4897-9733-A05BD453A22A}
+		{26F9D2F5-232C-4F92-9DF3-C8C24B5E4307} = {B735C56C-B941-4004-8A23-A3E91B1C9D4F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {C1918D7E-A586-42C0-88CB-E099CBAA6E2F}

@@ -16,6 +16,7 @@
     <ProjectReference Include="..\..\Data\RecipePortal.Db.Entities\RecipePortal.Db.Entities.csproj" />
     <ProjectReference Include="..\..\Shared\RecipePortal.Common\RecipePortal.Common.csproj" />
     <ProjectReference Include="..\RecipePortal.RabbitMqService\RecipePortal.RabbitMqService.csproj" />
+    <ProjectReference Include="..\RecipePortal.RecipeService\RecipePortal.RecipeService.csproj" />
   </ItemGroup>
 
 </Project>

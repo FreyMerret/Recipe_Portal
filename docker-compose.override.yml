@@ -53,6 +53,12 @@ services:
     env_file:
       - env.worker
 
+  recipeportal_web:
+    ports:
+      - "20003:80"
+    networks:
+      - shared-recipeportal-net
+
 volumes:
   sqlserver-data:
   rabbitmq-data:

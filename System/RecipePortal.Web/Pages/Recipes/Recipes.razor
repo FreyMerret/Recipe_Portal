@@ -1,0 +1,158 @@
+﻿@page "/recipes"
+
+@layout MainLayout
+
+@attribute [Authorize]
+
+@inject ISnackbar Snackbar
+@inject IRecipeService recipeService
+
+
+<MudPaper Elevation="0">
+    <MudStack Justify=Justify.Center AlignItems=AlignItems.Center Row="false">
+
+
+        <MudPaper Width="800px" Elevation="4" Class="mt-4 mb-2 p-3 pt-0">
+            <MudStack Justify=Justify.Center AlignItems=AlignItems.Center Row="true">
+                <MudTextField @bind-Value="_recipeName" HelperText="Название рецепта" Variant="Variant.Text" Clearable></MudTextField>
+                <MudTextField @bind-Value="_authorNickname" HelperText="Имя автора" Variant="Variant.Text" Clearable></MudTextField>
+                <MudSelect @bind-Value="@_categoryName" T="string" HelperText="Категория" Clearable>
+                    @foreach (var c in categoryListItems)
+                    {
+                        <MudSelectItem Value="@c.CategoryName" />
+                    }
+                </MudSelect>
+                <MudButton Variant="Variant.Filled" EndIcon="@Icons.Filled.Search" OnClick="GetRecypesWithFilters" Color="Color.Primary">Найти</MudButton>
+            </MudStack>
+        </MudPaper>
+
+
+        @foreach (var r in recipeListItems)
+        {
+            <MudPaper Width="800px" Elevation="4" Class="mt-2 mb-2 p-3">
+                <MudStack Justify=Justify.Center AlignItems=AlignItems.Center Row="false" Spacing="2">
+                    <MudPaper Width="100%" Height="80%" Elevation="0">
+                        <MudStack Justify=Justify.FlexStart AlignItems=AlignItems.Start Row="true">
+                            <MudPaper Width="20%" Height="150px" Elevation="1">
+                                <MudText>Image</MudText>
+                            </MudPaper>
+                            <MudPaper Width="80%" Elevation="0">
+                                <MudLink Href=@($"/recipes/{r.RecipeId}") Typo="Typo.h4" Class="mb-2">@r.Title</MudLink>
+                                <MudText Typo="Typo.body2">@r.Description</MudText>
+                            </MudPaper>
+                        </MudStack>
+                    </MudPaper>
+
+                    <MudPaper Width="100%" Height="20%" Elevation="0" Class="mt-0 mb-0 p-1">
+                        <MudDivider DividerType="DividerType.Middle" Class="mb-1 " />
+                        <MudStack Justify=Justify.FlexStart AlignItems=AlignItems.Start Row="true">
+                            @foreach (var i in r.CompositionFields)
+                            {
+                                <MudText Typo="Typo.subtitle2">@i.IngredientName</MudText>
+                                <MudDivider Vertical="true" FlexItem="true" />
+                            }
+                        </MudStack>
+                    </MudPaper>
+                </MudStack>
+            </MudPaper>
+        }
+
+        <MudPaper Elevation="0" Class="mb-4">
+            @if (_offset != 0)
+            {
+                <MudButton Variant="Variant.Filled" EndIcon="@Icons.Filled.NavigateBefore" OnClick="GetPrevious" Color="Color.Primary" Class="mx-2 ">Предыдущая</MudButton>
+            }
+            @if (_recipeCount == _limit)
+            {
+                <MudButton Variant="Variant.Filled" EndIcon="@Icons.Filled.NavigateNext" OnClick="GetNext" Color="Color.Primary" Class="mx-2">Следующая</MudButton>
+            }
+
+        </MudPaper>
+    </MudStack>
+</MudPaper>
+
+@code {
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public string? recipeName { get; set; }
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public int? categoryId { get; set; }
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public string? authorNickname { get; set; }
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public int? offset { get; set; }
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public int? limit { get; set; }
+
+    //дефолтные значения
+    string _recipeName = "";
+    int _categoryId = 0; string? _categoryName;
+    string _authorNickname = "";
+    int _offset = 0;
+    int _limit = 5;
+    int _recipeCount;
+
+    private List<RecipeListItem> recipeListItems = new List<RecipeListItem>();
+    private List<CategoryListItem> categoryListItems = new List<CategoryListItem>();
+
+    private async Task ReloadData()
+    {
+        recipeListItems = await recipeService.GetRecipes(_recipeName, _categoryId, _authorNickname, _offset, _limit);
+        _recipeCount = recipeListItems.Count();
+        categoryListItems = await recipeService.GetCategories();
+        _categoryName = categoryListItems.FirstOrDefault(x => x.CategoryId.Equals(_categoryId)).CategoryName;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            if (recipeName != null) _recipeName = recipeName;
+            if (categoryId != null) _categoryId = (int)categoryId;
+            if (authorNickname != null) _authorNickname = authorNickname;
+            if (offset != null) _offset = (int)offset;
+            if (limit != null) _limit = (int)limit;
+
+            await ReloadData();
+        }
+        catch (Exception ex)
+        {
+            //Snackbar.Add(ex.Message, Severity.Error);
+        }
+    }
+
+    protected async Task GetRecypesWithFilters()
+    {
+        if (_categoryName is null)
+            _categoryId = 0;
+        else
+            _categoryId = categoryListItems.FirstOrDefault(n => n.CategoryName.Equals(_categoryName)).CategoryId;
+
+        recipeListItems = await recipeService.GetRecipes(_recipeName, _categoryId, _authorNickname, _offset, _limit);
+        _recipeCount = recipeListItems.Count();
+    }
+
+    protected async Task GetNext()
+    {
+        _offset += _limit;
+
+        //вызов GetRecypesWithFilters не работал адекватно (хз в чем проблема)
+        recipeListItems = await recipeService.GetRecipes(_recipeName, _categoryId, _authorNickname, _offset, _limit);
+        _recipeCount = recipeListItems.Count();
+    }
+
+    protected async Task GetPrevious()
+    {
+        _offset -= _limit;
+        if (_offset < 0)
+            _offset = 0;
+
+        //вызов GetRecypesWithFilters не работал адекватно (хз в чем проблема)
+        recipeListItems = await recipeService.GetRecipes(_recipeName, _categoryId, _authorNickname, _offset, _limit);
+        _recipeCount = recipeListItems.Count();
+    }
+}

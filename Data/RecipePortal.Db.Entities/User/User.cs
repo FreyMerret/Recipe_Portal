@@ -15,6 +15,7 @@ public class User : IdentityUser<Guid>
     public virtual ICollection<Comment> Comments { get; set; }
 
     public virtual ICollection<SubscriptionToAuthor> SubscriptionsToAuthor { get; set; }
+
     public virtual ICollection<SubscriptionToAuthor> Subscribers { get; set; }
 
     public virtual ICollection<SubscriptionToCategory> SubscriptionsToCategory { get; set; }

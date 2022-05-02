@@ -4,15 +4,25 @@ namespace RecipePortal.UserAccountService;
 
 public interface IUserAccountService
 {
+    Task<IEnumerable<UserAccountModel>> GetUsers(string authorNickname, int offset, int limit);
+    Task<UserAccountModel> GetUser (string authorNickname);
     Task<UserAccountModel> Create (RegisterUserAccountModel model);
 
 
-    //SUBSCRIBE
-    Task AddSubscriptionToAuthor(Guid subscriber, string autorNickname);
+    //SUBSCRIPTIONS
+    Task<SubscriptionToAuthorModel> AddSubscriptionToAuthor(Guid subscriber, string authorNickname);
 
-    Task AddSubscriptionToCategory(SubscriptionToCategoryModel model);
+    Task DeleteSubscriptionToAuthor(DeleteSubscriptionModel model);
 
-    Task AddSubscriptionToComments(SubscriptionToCommentsModel model);
+    Task<SubscriptionToCategoryModel> AddSubscriptionToCategory(AddSubscriptionToCategoryModel model);
+
+    Task DeleteSubscriptionToCategory(DeleteSubscriptionModel model);
+
+    Task<SubscriptionToCommentsModel> AddSubscriptionToComments(AddSubscriptionToCommentsModel model);
+
+    Task DeleteSubscriptionToComments(DeleteSubscriptionModel model);
+
+    Task<AllSubscriptionsModel> GetSubscriptions(Guid user);
 
 
     // .. “акже здесь можно разместить методы дл€ изменени€ данных учетной записи, восстановлени€ и смены парол€, подтверждени€ электронной почты, установки телефона и его подтверждени€ и т.д.

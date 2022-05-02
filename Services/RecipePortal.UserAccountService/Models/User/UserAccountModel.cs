@@ -9,6 +9,7 @@ public class UserAccountModel
     public string Surname { get; set; }
     public string Username { get; set; }
     public string Email { get; set; }
+
 }
 
 public class UserAccountModelProfile : Profile

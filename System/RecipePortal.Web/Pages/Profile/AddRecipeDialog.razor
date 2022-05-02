@@ -1,0 +1,171 @@
+﻿@inherits MudComponentBase
+
+@attribute [Authorize]
+
+@using System.Text.RegularExpressions
+@using System.ComponentModel.DataAnnotations
+
+@inject IRecipeService recipeService
+
+<MudDialog Class="navbar-nav-scroll">
+    <DialogContent>
+        <MudForm Model="model" @ref="form" Validation="@(modelValidator.ValidateValue)">
+
+                    <MudGrid Justify="Justify.Center">
+                        <MudItem xs="8">
+                            <MudPaper Elevation="0" Class="p-2">
+                                <MudTextField Label="Название рецепта" @bind-Value="model.Title" For="@(() => model.Title)" Required="true" RequiredError="Название обязательно к заполнению!">
+                                </MudTextField>
+                            </MudPaper>
+                        </MudItem>
+
+                        <MudItem xs="4">
+                            <MudPaper Elevation="0" Class="p-2">
+                                <MudSelect @bind-Value="@_categoryName" For="@(() => _categoryName)" T="string" HelperText="Категория">
+                                    @foreach (var c in categoryListItems)
+                                    {
+                                        <MudSelectItem Value="@c.CategoryName" />
+                                    }
+                                </MudSelect>
+                            </MudPaper>
+                        </MudItem>
+
+                        <MudItem xs="12">
+                            <MudPaper Elevation="0" Class="p-2">
+                                <MudTextField Label="Краткое описание блюда" @bind-Value="model.Description"
+                                              For="@(() => model.Description)"
+                                              Required="true"
+                                              RequiredError="Количество ингридиента обязательно к заполнению!"
+                                              Lines="3">
+                                </MudTextField>
+                            </MudPaper>
+                        </MudItem>
+
+                        <MudItem xs="12">
+                            <MudPaper Elevation="0" Class="p-2">
+                                <MudSimpleTable Dense="true" Bordered="true" Striped="true" Style="overflow-x: auto;">
+                                    <tbody>
+                                        @for (int i = 0;  i < _compositionFieldsWithNames.Count();i++)
+                                        {
+                                            int localindex = i;
+                                            <tr>
+                                                <td width="45%">
+                                                    @*В идеале здесь должен быть не просто select, а возможность писать название + в виде Select-а выдача ингридиентов, которые
+                                                        начинаются с тех букв, что ввел пользователь. Но, увы, моих навыков FE, возможностей MudBlazor и времени недостаточно
+                                                        чтобы реализовать это в данный момент. Так что ждите новые версии нашего продукта. С любовью FreyMerret ❤❤❤
+                                                        https://pbs.twimg.com/media/FLppZF-WQAcKzCO.jpg
+                                                    *@
+                                                    <MudSelect @bind-Value="_compositionFieldsWithNames[localindex].IngredientName" 
+                                                               For="@(() => _compositionFieldsWithNames[localindex].IngredientName)" 
+                                                               T="string">
+                                                        @foreach (var ing in ingredientListItems)
+                                                        {
+                                                            <MudSelectItem Value="@ing.IngredientName" />
+                                                        }
+                                                    </MudSelect>                                                  
+                                                    
+                                                </td>
+                                                <td width="50%">
+                                                    <MudTextField Placeholder="Короткое описание" @bind-Value="_compositionFieldsWithNames[localindex].Quantity"
+                                                                  For="@(() => _compositionFieldsWithNames[localindex].Quantity)"
+                                                                  Required="true"
+                                                                  RequiredError="Количество ингридиента обязательно к заполнению!"
+                                                                  MaxLength="50">                                                   
+                                                    </MudTextField>
+                                                </td>
+                                                <td width="5%">
+                                                    <MudIconButton OnClick="(()=>RemoveCompositionField(localindex))" Icon="@Icons.Rounded.Cancel" aria-label="delete" Class="p-0"></MudIconButton>
+                                                </td>
+
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </MudSimpleTable>
+                                <MudStack Justify=Justify.Center AlignItems=AlignItems.Center Row="true">
+                                    <MudPaper Elevation="0" Class="my-2">
+                                        <MudButton OnClick="(()=>AddRecipeCompositionField())" Variant="Variant.Outlined" Color="Color.Success">Добавить ингридиент</MudButton>
+                                    </MudPaper>
+                                </MudStack>
+                            </MudPaper>
+                        </MudItem>
+
+                        <MudItem xs="12">
+                            <MudPaper Elevation="0" Class="p-2">
+                                <MudTextField Label="Шаги рецепта" @bind-Value="model.Text"
+                                              For="@(() => model.Text)"
+                                              Required="true"
+                                              RequiredError="Шаги рецепта обязательнs к заполнению!"
+                                              Lines="10">
+                                </MudTextField>
+                            </MudPaper>
+                        </MudItem>
+                    </MudGrid>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="MudBlazor.Color.Primary" OnClick="Submit">Ok</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; } = default!;
+
+    MudForm form = default!;
+
+    AddRecipeRequestValidator modelValidator = new AddRecipeRequestValidator();
+    AddRecipeCompositionFieldItemValidator ingredientValidator = new AddRecipeCompositionFieldItemValidator();
+
+    public AddRecipeRequest model { get; set; } = new() { RecipeCompositionFields = new List<AddRecipeCompositionFieldItem>() };
+
+    private List<CategoryListItem> categoryListItems = new List<CategoryListItem>();
+    private List<IngredientListItem> ingredientListItems = new List<IngredientListItem>();
+    private List<CompositionFieldItem> _compositionFieldsWithNames = new List<CompositionFieldItem>()
+    {
+        new CompositionFieldItem()
+        {
+            IngredientName = "Куриное филе",
+            Quantity = "500 грамм"
+        }
+    };
+    int _categoryId = 0; 
+    string _categoryName = "Первые блюда";
+
+    protected override async Task OnInitializedAsync()
+    {
+        categoryListItems = await recipeService.GetCategories();
+        ingredientListItems = await recipeService.GetIngredients();
+    }
+
+    private void RemoveCompositionField(int i)
+    {
+        _compositionFieldsWithNames.RemoveAt(i);
+    }
+
+    private void AddRecipeCompositionField()
+    {
+        _compositionFieldsWithNames.Add(new CompositionFieldItem());
+    }
+
+
+    async Task Submit()
+    {
+        model.CategoryId = categoryListItems.FirstOrDefault(n => n.CategoryName.Equals(_categoryName)).CategoryId;
+        foreach(var i in _compositionFieldsWithNames)
+        {
+            model.RecipeCompositionFields.Add(new AddRecipeCompositionFieldItem()
+                {
+                    IngredientId = ingredientListItems.FirstOrDefault(n => n.IngredientName.Equals(i.IngredientName)).IngredientId,
+                    Quantity = i.Quantity
+                });
+        };
+
+        await form.Validate();
+        if (form.IsValid)
+        {
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+    }
+    void Cancel() => MudDialog.Cancel();
+}
