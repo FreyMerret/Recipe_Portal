@@ -71,7 +71,7 @@ public class RecipeService : IRecipeService
         recipes = recipes
             .OrderByDescending(o => o.Id)
             .Skip(Math.Max(offset, 0))
-            .Take(Math.Min(limit, 100));
+            .Take(Math.Max(0,Math.Min(limit, 100)));
 
         var data = (await recipes.ToListAsync()).Select(recipe => mapper.Map<RecipeModel>(recipe)).ToList();
 
@@ -94,7 +94,7 @@ public class RecipeService : IRecipeService
         return data;
     }
 
-    public async Task<RecipeModel> AddRecipe(AddRecipeModel model)
+    public async Task<RecipeModel> AddRecipe(AddRecipeModel model, bool? mailing = true)
     {
         addRecipeModelValidator.Check(model);
 
@@ -105,6 +105,7 @@ public class RecipeService : IRecipeService
         await context.Recipes.AddAsync(recipe);
         context.SaveChanges();
 
+        if(mailing == true)
         await rabbitMqTask.MailingNewRecipe(recipe.Id);     //кидаю задачу на рассылку о новом рецепте
 
         var response = mapper.Map<RecipeModel>(await GetRecipe(recipe.Id));

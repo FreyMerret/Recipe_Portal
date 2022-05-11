@@ -6,7 +6,7 @@
 @inject IAuthService AuthService
 @inject NavigationManager NavigationManager
 
-<MudGrid Justify="Justify.Center" Class="pa-10">
+<MudGrid Justify="Justify.Center" Class="pt-8">
     <MudItem xs="7" sm="4">
         <MudPaper Class="pa-4">
             <EditForm Model="@model" OnValidSubmit="OnValidSubmit">
@@ -41,10 +41,19 @@
                     <MudLink Href="/forgot-password">Forgot pwd?</MudLink>
                 </div>
 
-                <MudButton Variant="Variant.Filled"
-                           Color="Color.Primary"
-                           Size="Size.Large"
-                           ButtonType="ButtonType.Submit">Sign In</MudButton>
+                <MudStack Justify=Justify.SpaceAround AlignItems=AlignItems.Start Row="true">
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               Size="Size.Large" 
+                               FullWidth="true"
+                               ButtonType="ButtonType.Submit">Sign In</MudButton>
+                    <MudButton Href="./registration"
+                               Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               Size="Size.Large" 
+                               FullWidth="true"
+                               ButtonType="ButtonType.Submit">Registration</MudButton>
+                </MudStack>
             </EditForm>
         </MudPaper>
     </MudItem>

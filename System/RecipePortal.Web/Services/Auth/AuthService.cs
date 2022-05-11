@@ -24,6 +24,20 @@ public class AuthService : IAuthService
         _localStorage = localStorage;
     }
 
+    public async Task<bool> Register(RegisterUserAccountRequest registerModel)
+    {
+        var url = $"{Settings.ApiRoot}/v1/accounts";
+
+        var body = JsonSerializer.Serialize(registerModel);
+        var request = new StringContent(body, Encoding.UTF8, "application/json");
+        var response = await _httpClient.PostAsync(url, request);
+
+        if (!response.IsSuccessStatusCode)
+            return false;
+
+        return true;
+    }
+
     public async Task<LoginResult> Login(LoginModel loginModel)
     {
         var url = $"{Settings.IdentityRoot}/connect/token";
@@ -83,7 +97,7 @@ public class AuthService : IAuthService
         var savedToken = await _localStorage.GetItemAsync<string>("refreshToken");
 
         if (string.IsNullOrWhiteSpace(savedToken))  //если проблемы с рефреш токеном, то выбрасываем на страницу авторизации
-            Logout();
+            await Logout();
 
         //если он есть, то идем обновляться
         var url = $"{Settings.IdentityRoot}/connect/token";
@@ -108,12 +122,24 @@ public class AuthService : IAuthService
         loginResult.Successful = response.IsSuccessStatusCode;
 
         if (!response.IsSuccessStatusCode)  //ошибка при обновлении токена -> выбрасываем на страницу авторизации
-            Logout();
+            await Logout();
 
         await _localStorage.SetItemAsync("authToken", loginResult.AccessToken);
         await _localStorage.SetItemAsync("refreshToken", loginResult.RefreshToken);
 
         _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("bearer", loginResult.AccessToken);
 
+    }
+
+    public async Task<bool> EmailConfirmation(string email, string emailConfirmToken)
+    {
+        string url = $"{Settings.ApiRoot}/v1/accounts/confirm_email?userEmail={email}&emailConfirmToken={emailConfirmToken}";
+
+        var response = await _httpClient.GetAsync(url);
+
+        if(response.StatusCode == System.Net.HttpStatusCode.OK)
+            return true;
+
+        return false;
     }
 }

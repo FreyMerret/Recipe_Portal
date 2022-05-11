@@ -41,7 +41,7 @@ public static class AppClients
                 AllowOfflineAccess = true,
                 AccessTokenType = AccessTokenType.Jwt,
 
-                AccessTokenLifetime = 60, // 1 hour
+                AccessTokenLifetime = 3600, // 1 hour
 
                 RefreshTokenUsage = TokenUsage.OneTimeOnly,
                 RefreshTokenExpiration = TokenExpiration.Sliding,

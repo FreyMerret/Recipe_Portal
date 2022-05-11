@@ -16,11 +16,11 @@ public static class DbConfiguration
         return services;
     }
 
-    public static WebApplication UseAppDbContext(this WebApplication app)
+    public static IApplicationBuilder UseAppDbContext(this IApplicationBuilder app)
     {
-        DbInit.Execute(app.Services);
+        DbInit.Execute(app.ApplicationServices);
 
-        DbSeed.Execute(app.Services);
+        DbSeed.Execute(app.ApplicationServices);
 
         return app;
     }

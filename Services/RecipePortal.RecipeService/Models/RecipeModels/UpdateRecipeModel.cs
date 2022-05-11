@@ -23,11 +23,16 @@ public class UpdateRecipeModelValidator : AbstractValidator<UpdateRecipeModel>
 {
     public UpdateRecipeModelValidator()
     {
+        RuleFor(x => x.CategoryId)
+            .GreaterThan(0);
+
         RuleFor(x => x.Title)
             .NotEmpty().WithMessage("Title is required")
             .MaximumLength(50).WithMessage("Too long title");
 
         RuleFor(x => x.Description).MaximumLength(200).WithMessage("Too long description");
+
+        RuleFor(x => x.Text).MaximumLength(2000).WithMessage("Too long text");
     }
 }
 

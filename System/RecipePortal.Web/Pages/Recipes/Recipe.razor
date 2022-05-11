@@ -14,6 +14,7 @@
     <MudStack Justify=Justify.Center AlignItems=AlignItems.Center Row="false">
         <MudPaper Width="800px" Elevation="4" Class="mt-3 mb-3 p-3">
             <MudStack Justify=Justify.Center AlignItems=AlignItems.Center Row="false" Spacing="2">
+
                 <MudPaper Width="800px" Elevation="0" Class="px-4">
                     <MudStack Justify=Justify.FlexStart AlignItems=AlignItems.Start Row="true">
                         <MudPaper Width="77%" Elevation="0">
@@ -55,13 +56,14 @@
                 </MudPaper>
                 <MudPaper Width="100%" Height="80%" Elevation="0">
                     <MudStack Justify=Justify.FlexStart AlignItems=AlignItems.Start Row="true">
-                        <MudPaper Width="80%" Elevation="0">
+                        <MudPaper Width="100%" Elevation="0">
                             <MudText Typo="Typo.h4">@recipe.Title</MudText>
                             <MudText Typo="Typo.h6">
                                 Категория:
                                 <MudLink Href=@($"/recipes/?categoryId={@recipe.CategoryId}") Color="Color.Warning" Typo="Typo.h6"> @recipe.Category</MudLink>
                             </MudText>
-                            <MudText Typo="Typo.body1">@recipe.Description</MudText>
+                            @*<MudText Typo="Typo.body1">@recipe.Description</MudText>*@
+                            <MudTextField @bind-Value="@recipe.Description" Variant="Variant.Text" Lines="5" ReadOnly="true"/>
                         </MudPaper>
                     </MudStack>
                 </MudPaper>
@@ -86,7 +88,8 @@
                 </MudPaper>
 
                 <MudPaper Width="100%" Height="20%" Elevation="0">
-                    <MudText Typo="Typo.body1">@recipe.Text</MudText>
+                    @*<MudField Typo="Typo.body1">@recipe.Text</MudField>*@
+                    <MudTextField @bind-Value="@recipe.Text" Variant="Variant.Text" Lines="10" ReadOnly="true"/>
                 </MudPaper>
 
 
@@ -125,7 +128,7 @@
                                     <MudPaper Elevation="0" Class="mr-2 mt-3">
                                         @if(currentUserUsername.Equals(c.AuthorNickname))
                                         {
-                                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="((e)=>EditComment(c))"></MudIconButton>
+                                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="((e)=>UpdateComment(c))"></MudIconButton>
                                             <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" OnClick="((e)=>DeleteComment(c))"></MudIconButton>
                                         }
                                     </MudPaper>
@@ -252,7 +255,7 @@
         _commentsOffset += 1;
     }
 
-    private async Task EditComment(CommentListItem comment)
+    private async Task UpdateComment(CommentListItem comment)
     {
         var parameters = new DialogParameters();
         parameters.Add("comment", comment);
@@ -264,7 +267,7 @@
         if (!result.Cancelled)
         {
             var request = new CommentRequest() { CommentText = ((UpdateCommentDialog)dialog.Dialog).comment.CommentText };
-            comments[comments.IndexOf(comment)] = await recipeService.EditComment(recipeId,comment.Id, request);
+            comments[comments.IndexOf(comment)] = await recipeService.UpdateComment(recipeId,comment.Id, request);
         }
     }
 

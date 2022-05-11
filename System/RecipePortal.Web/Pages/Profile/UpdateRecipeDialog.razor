@@ -1,0 +1,183 @@
+﻿@inherits MudComponentBase
+
+@attribute [Authorize]
+
+@using System.Text.RegularExpressions
+@using System.ComponentModel.DataAnnotations
+
+@inject IRecipeService recipeService
+@inject IDialogService dialogService
+
+<MudDialog Class="navbar-nav-scroll">
+    <DialogContent>
+        <MudForm Model="model" @ref="form" Validation="@(modelValidator.ValidateValue)">
+
+                    <MudGrid Justify="Justify.Center">
+                        <MudItem xs="8">
+                            <MudPaper Elevation="0" Class="p-2">
+                                <MudTextField Label="Название рецепта" @bind-Value="model.Title" For="@(() => model.Title)" Required="true" RequiredError="Название обязательно к заполнению!">
+                                </MudTextField>
+                            </MudPaper>
+                        </MudItem>
+
+                        <MudItem xs="4">
+                            <MudPaper Elevation="0" Class="p-2">
+                                <MudSelect @bind-Value="@_categoryName" For="@(() => _categoryName)" T="string" HelperText="Категория">
+                                    @foreach (var c in categoryListItems)
+                                    {
+                                        <MudSelectItem Value="@c.CategoryName" />
+                                    }
+                                </MudSelect>
+                            </MudPaper>
+                        </MudItem>
+
+                        <MudItem xs="12">
+                            <MudPaper Elevation="0" Class="p-2">
+                                <MudTextField Label="Краткое описание блюда" @bind-Value="model.Description"
+                                              For="@(() => model.Description)"
+                                              Required="true"
+                                              RequiredError="Краткое описание обязательно к заполнению!"
+                                              Lines="3">
+                                </MudTextField>
+                            </MudPaper>
+                        </MudItem>
+
+                        <MudItem xs="12">
+                            <MudPaper Elevation="0" Class="p-2">
+                                <MudSimpleTable Dense="true" Bordered="true" Striped="true" Style="overflow-x: auto;">
+                                    <tbody>
+                                        @foreach (var item in _compositionFields)
+                                        {
+                                            <tr>
+                                                <td width="45%">                                   
+                                                    <MudText Typo="Typo.body2">@item.IngredientName</MudText>
+                                                </td>
+                                                <td width="50%">
+                                                   <MudText Typo="Typo.body2">@item.Quantity</MudText>
+                                                </td>
+                                                <td width="5%">
+                                                    <MudIconButton OnClick="(()=>UpdateCompositionField(item))" Icon="@Icons.Rounded.Edit" Class="p-0"></MudIconButton>
+                                                    <MudIconButton OnClick="(()=>DeleteCompositionField(item))" Icon="@Icons.Rounded.Cancel" Class="p-0"></MudIconButton>
+                                                </td>
+
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </MudSimpleTable>
+                                <MudStack Justify=Justify.Center AlignItems=AlignItems.Center Row="true">
+                                    <MudPaper Elevation="0" Class="my-2">
+                                        <MudButton OnClick="(()=>AddCompositionField())" Variant="Variant.Outlined" Color="Color.Success">Добавить ингридиент</MudButton>
+                                    </MudPaper>
+                                </MudStack>
+                            </MudPaper>
+                        </MudItem>
+
+                        <MudItem xs="12">
+                            <MudPaper Elevation="0" Class="p-2">
+                                <MudTextField Label="Шаги рецепта" @bind-Value="model.Text"
+                                              For="@(() => model.Text)"
+                                              Required="true"
+                                              RequiredError="Шаги рецепта обязательнs к заполнению!"
+                                              Lines="10">
+                                </MudTextField>
+                            </MudPaper>
+                        </MudItem>
+                    </MudGrid>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="MudBlazor.Color.Primary" OnClick="Submit">Ok</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; } = default!;
+    [Parameter]
+    public int? RecipeId { get; set; } = default;
+
+    MudForm form = default!;
+
+    UpdateRecipeRequestValidator modelValidator = new UpdateRecipeRequestValidator();
+
+    public UpdateRecipeRequest model { get; set; } = new UpdateRecipeRequest();
+
+    private RecipeListItem recipe = new RecipeListItem();
+    private List<CategoryListItem> categoryListItems = new List<CategoryListItem>();
+    private List<CompositionFieldItem> _compositionFields = new List<CompositionFieldItem>() {};
+    string _categoryName = "";
+    bool _isNew = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        categoryListItems = await recipeService.GetCategories();
+
+        _isNew = RecipeId == null;
+        if(!_isNew)
+        {
+            recipe = await recipeService.GetRecipe(RecipeId ?? 0);
+            model.CategoryId = recipe.CategoryId;
+            _categoryName = recipe.Category;
+            model.Title = recipe.Title;
+            model.Description = recipe.Description;
+            model.Text = recipe.Text;
+            _compositionFields = recipe.CompositionFields;
+        }
+    }
+
+    private async Task AddCompositionField()
+    {
+        var parameters = new DialogParameters();
+
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+        var dialog = dialogService.Show<ComposititonFieldDialog>("Добавление ингридиента", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Cancelled)
+        {
+            var request = ((ComposititonFieldDialog)dialog.Dialog).model;
+            var responce = await recipeService.AddCompositionField(recipe.RecipeId, request);
+            _compositionFields.Add(responce);
+        }
+    }
+
+    private async Task UpdateCompositionField(CompositionFieldItem item)
+    {
+         var parameters = new DialogParameters();
+         parameters.Add("Item", item);
+
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+        var dialog = dialogService.Show<ComposititonFieldDialog>("Изменение ингридиента", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Cancelled)
+        {
+            var request = ((ComposititonFieldDialog)dialog.Dialog).model;
+            var responce = await recipeService.UpdateCompositionField(recipe.RecipeId, item.CompositionFieldId, request);
+            _compositionFields[_compositionFields.IndexOf(item)] = responce;
+        }
+    }
+
+    private async Task DeleteCompositionField(CompositionFieldItem item)
+    {
+        await recipeService.DeleteCompositionField(recipe.RecipeId, item.CompositionFieldId);
+        _compositionFields.Remove(item);
+    }
+
+    async Task Submit()
+    {
+        model.CategoryId = categoryListItems.FirstOrDefault(n => n.CategoryName.Equals(_categoryName)).CategoryId;
+
+        //если ничего не меняли (или меняли только ингридиенты), то и обновлять рацепт незачем 
+        if (model.CategoryId == recipe.CategoryId && model.Title == recipe.Title && model.Description == recipe.Description && model.Text == recipe.Text)
+            Cancel();
+
+        await form.Validate();
+        if (form.IsValid)
+        {
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+    }
+    void Cancel() => MudDialog.Cancel();
+}

@@ -7,6 +7,7 @@ public interface IUserAccountService
     Task<IEnumerable<UserAccountModel>> GetUsers(string authorNickname, int offset, int limit);
     Task<UserAccountModel> GetUser (string authorNickname);
     Task<UserAccountModel> Create (RegisterUserAccountModel model);
+    Task EmailConfirmation (string userEmail, string emailConfirmToken);
 
 
     //SUBSCRIPTIONS

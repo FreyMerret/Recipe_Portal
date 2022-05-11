@@ -3,15 +3,13 @@
 public interface IRecipeService
 {
     //RECIPES
-    //Task<IEnumerable<RecipeListItem>> GetRecipes(int offset, int limit);
-
     Task<List<RecipeListItem>> GetRecipes(string recipeName = "", int categoryId = 0, string authorNickname = "", int offset = 0, int limit = 10);
 
     Task<RecipeListItem> GetRecipe(int recipeId);
 
     Task<RecipeListItem> AddRecipe(AddRecipeRequest model);
 
-    //Task<RecipeModel> UpdateRecipe(UpdateRecipeModel model);
+    Task<RecipeListItem> UpdateRecipe(int recipeId, UpdateRecipeRequest model);
 
     Task DeleteRecipe(int recipeId);
 
@@ -21,17 +19,17 @@ public interface IRecipeService
 
     Task<CommentListItem> AddComment(int recipeId, CommentRequest model);
 
-    Task<CommentListItem> EditComment(int recipeId, int commentId, CommentRequest model);
+    Task<CommentListItem> UpdateComment(int recipeId, int commentId, CommentRequest model);
 
     Task DeleteComment(int recipeId, int commentId);
 
 
     //COMPOSITION FIELDS
-    //Task<CompositionFieldModel> AddCompositionField(AddCompositionFieldModel model);
+    Task<CompositionFieldItem> AddCompositionField(int recipeId, CompositionFieldRequest model);
 
-    //Task<CompositionFieldModel> UpdateCompositionField(UpdateCompositionFieldModel model);
+    Task<CompositionFieldItem> UpdateCompositionField(int recipeId, int compositionFieldId, CompositionFieldRequest model);
 
-    //Task DeleteCompositionField(int compositionFieldId, Guid requestAuthor);
+    Task DeleteCompositionField(int recipeId, int compositionFieldId);
 
 
     //ADDITION

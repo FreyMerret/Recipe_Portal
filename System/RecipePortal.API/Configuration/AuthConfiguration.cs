@@ -62,7 +62,7 @@ public static class AuthConfiguration
         return services;
     }
 
-    public static WebApplication UseAppAuth(this WebApplication app)
+    public static IApplicationBuilder UseAppAuth(this IApplicationBuilder app)
     {
         app.UseAuthentication();
 

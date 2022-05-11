@@ -9,7 +9,7 @@ public interface IRecipeService
 
     Task<RecipeModel> GetRecipe(int recipeId);
 
-    Task<RecipeModel> AddRecipe(AddRecipeModel model);
+    Task<RecipeModel> AddRecipe(AddRecipeModel model, bool? mailing = true);
 
     Task<RecipeModel> UpdateRecipe(UpdateRecipeModel model);
 

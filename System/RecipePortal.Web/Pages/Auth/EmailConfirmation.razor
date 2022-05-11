@@ -1,0 +1,49 @@
+@page "/email_confirmation"
+@layout SimpleLayout
+
+@using System.ComponentModel.DataAnnotations
+@using System.Text
+
+
+@inject IAuthService AuthService
+@inject NavigationManager NavigationManager
+
+<MudGrid Justify="Justify.Center" Class="pa-10">
+    <MudItem xs="7" sm="4">
+        <MudPaper Class="pa-4">
+            <MudText>@info</MudText>
+            <br/>
+            <MudButton Href="./">Main page</MudButton>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+
+@code {
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public string? userEmail { get; set; }
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public string? emailConfirmToken { get; set; }
+
+    string info = "Confirming...";
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (userEmail != null && emailConfirmToken != null)
+        {
+            var confirm = await AuthService.EmailConfirmation(userEmail,emailConfirmToken);
+            if (confirm)
+            {
+                info = "Email confirmed";
+                Thread.Sleep(3000);
+                NavigationManager.NavigateTo("./");
+            }
+            else
+            {
+                info = "An unexpected error has occurred";
+            }
+        }
+        
+    }
+}

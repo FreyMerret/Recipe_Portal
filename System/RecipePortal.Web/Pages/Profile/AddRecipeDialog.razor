@@ -35,7 +35,7 @@
                                 <MudTextField Label="Краткое описание блюда" @bind-Value="model.Description"
                                               For="@(() => model.Description)"
                                               Required="true"
-                                              RequiredError="Количество ингридиента обязательно к заполнению!"
+                                              RequiredError="Краткое описание обязательно к заполнению!"
                                               Lines="3">
                                 </MudTextField>
                             </MudPaper>
@@ -66,7 +66,7 @@
                                                     
                                                 </td>
                                                 <td width="50%">
-                                                    <MudTextField Placeholder="Короткое описание" @bind-Value="_compositionFieldsWithNames[localindex].Quantity"
+                                                    <MudTextField Placeholder="Количество ингридиента" @bind-Value="_compositionFieldsWithNames[localindex].Quantity"
                                                                   For="@(() => _compositionFieldsWithNames[localindex].Quantity)"
                                                                   Required="true"
                                                                   RequiredError="Количество ингридиента обязательно к заполнению!"
@@ -83,7 +83,7 @@
                                 </MudSimpleTable>
                                 <MudStack Justify=Justify.Center AlignItems=AlignItems.Center Row="true">
                                     <MudPaper Elevation="0" Class="my-2">
-                                        <MudButton OnClick="(()=>AddRecipeCompositionField())" Variant="Variant.Outlined" Color="Color.Success">Добавить ингридиент</MudButton>
+                                        <MudButton OnClick="(()=>AddCompositionField())" Variant="Variant.Outlined" Color="Color.Success">Добавить ингридиент</MudButton>
                                     </MudPaper>
                                 </MudStack>
                             </MudPaper>
@@ -138,20 +138,20 @@
         ingredientListItems = await recipeService.GetIngredients();
     }
 
+    private void AddCompositionField()
+    {
+        _compositionFieldsWithNames.Add(new CompositionFieldItem() { IngredientName = "Куриное филе"}); //дефолтное значение 
+    }
+
     private void RemoveCompositionField(int i)
     {
         _compositionFieldsWithNames.RemoveAt(i);
     }
 
-    private void AddRecipeCompositionField()
-    {
-        _compositionFieldsWithNames.Add(new CompositionFieldItem());
-    }
-
-
     async Task Submit()
     {
         model.CategoryId = categoryListItems.FirstOrDefault(n => n.CategoryName.Equals(_categoryName)).CategoryId;
+        model.RecipeCompositionFields = new List<AddRecipeCompositionFieldItem>();
         foreach(var i in _compositionFieldsWithNames)
         {
             model.RecipeCompositionFields.Add(new AddRecipeCompositionFieldItem()

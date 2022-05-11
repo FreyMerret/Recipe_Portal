@@ -26,13 +26,13 @@ public class AddRecipeRequestValidator : AbstractValidator<AddRecipeRequest>
     {
         RuleFor(x => x.Title)
             .NotEmpty().WithMessage("Title is required")
-            .MaximumLength(50).WithMessage("Too long title");
+            .MaximumLength(200).WithMessage("Too long title");
 
         RuleFor(v => v.CategoryId)
             .GreaterThan(0).WithMessage("Please, select an category");
 
         RuleFor(v => v.Description)
-             .MaximumLength(1024).WithMessage("Description length must be less then 1024");
+             .MaximumLength(2000).WithMessage("Description length must be less then 2000");
     }
 
     public Func<object, string, Task<IEnumerable<string>>> ValidateValue => async (model, propertyName) =>

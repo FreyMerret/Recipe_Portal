@@ -9,7 +9,7 @@ using RecipePortal.Settings;
 
 public static class IS4Configuration
 {
-    public static IServiceCollection AddIS4(this IServiceCollection services)
+    public static IServiceCollection AddIS4(this IServiceCollection services, bool? testUsers = false)
     {
         services
             .AddIdentity<User, IdentityRole<Guid>>(opt =>
@@ -24,7 +24,8 @@ public static class IS4Configuration
             .AddUserManager<UserManager<User>>()
             .AddDefaultTokenProviders();
 
-        services
+        if (testUsers == true)  //костыль, чтобы работали тесты
+            services
             .AddIdentityServer()
             .AddAspNetIdentity<User>()
             .AddInMemoryApiScopes(AppApiScopes.ApiScopes)
@@ -32,8 +33,17 @@ public static class IS4Configuration
             .AddInMemoryApiResources(AppResources.Resources)
             .AddInMemoryIdentityResources(AppIdentityResources.Resources)
 
-            //.AddTestUsers(AppApiTestUsers.ApiUsers)
+            .AddTestUsers(AppApiTestUsers.ApiUsers)
 
+            .AddDeveloperSigningCredential();
+        else
+            services
+            .AddIdentityServer()
+            .AddAspNetIdentity<User>()
+            .AddInMemoryApiScopes(AppApiScopes.ApiScopes)
+            .AddInMemoryClients(AppClients.Clients)
+            .AddInMemoryApiResources(AppResources.Resources)
+            .AddInMemoryIdentityResources(AppIdentityResources.Resources)
             .AddDeveloperSigningCredential();
 
         return services;

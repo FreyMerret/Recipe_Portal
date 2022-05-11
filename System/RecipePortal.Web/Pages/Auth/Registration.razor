@@ -1,0 +1,142 @@
+@page "/registration"
+@layout SimpleLayout
+
+@using System.ComponentModel.DataAnnotations
+
+@inject ISnackbar Snackbar
+@inject IAuthService AuthService
+@inject NavigationManager NavigationManager
+
+<MudGrid Justify="Justify.Center" Class="pt-8">
+    <MudItem xs="7" sm="4">
+        <MudPaper Class="pa-4">
+            <MudForm Model="model" @ref="form" Validation="@(modelValidator.ValidateValue)">
+
+
+                <MudText Typo="Typo.h4" GutterBottom="true" Class="mb-3">Registration</MudText>
+
+                <MudAlert Severity="Severity.Error" Class="@(ShowErrors ? "mb-3 d-block" : "d-none")">
+                    @Error
+                    <br />
+                    @ErrorDetail
+                </MudAlert>
+
+                <MudTextField T="string"
+                              @bind-Value="model.Name" For="@(() => model.Name)"
+                              Label="Name"
+                              Required="true"
+                              RequiredError="Name is required!" />
+
+                <MudTextField T="string"
+                              @bind-Value="model.Surname" For="@(() => model.Surname)"
+                              Label="Surname"
+                              Required="true"
+                              RequiredError="Surname is required!" />
+
+                <MudTextField T="string"
+                              @bind-Value="model.Username" For="@(() => model.Username)"
+                              Label="Login"
+                              Required="true"
+                              RequiredError="Login is required!" />
+
+                <MudTextField T="string"
+                              @bind-Value="model.Email" For="@(() => model.Email)"
+                              Label="Email"
+                              Required="true"
+                              RequiredError="Email is required!" />
+
+                <MudTextField @bind-Value="model.Password" For="@(() => model.Password)"
+                              Label="Password"
+                              HelperText="Input your password"
+                              InputType="@PasswordInput"
+                              Adornment="Adornment.End"
+                              AdornmentIcon="@PasswordInputIcon"
+                              Required="true"
+                              RequiredError="Password is required!"
+                              OnAdornmentClick="TogglePasswordVisibility" />
+
+                <MudTextField @bind-Value="repeatPassword" For="@(() => repeatPassword)"
+                              Label="Repeat Password"
+                              HelperText="Repeat your password"
+                              InputType="@PasswordInput"
+                              Adornment="Adornment.End"
+                              AdornmentIcon="@PasswordInputIcon"
+                              Required="true"
+                              RequiredError="You must repeat your password"
+                              OnAdornmentClick="TogglePasswordVisibility" />                
+            </MudForm>
+
+            <MudStack Justify=Justify.SpaceAround AlignItems=AlignItems.Start Row="true">
+                    <MudButton OnClick="Register"
+                               Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               Size="Size.Large" 
+                               FullWidth="true"
+                               ButtonType="ButtonType.Submit">Registration</MudButton>
+                    <MudButton Href="./login"
+                               Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               Size="Size.Large" 
+                               FullWidth="true"
+                               ButtonType="ButtonType.Submit">Sign In</MudButton>
+            </MudStack>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+
+@code {
+    bool success;
+    MudForm? form;
+
+    RegisterUserAccountRequestValidator modelValidator = new RegisterUserAccountRequestValidator();
+    RegisterUserAccountRequest model = new RegisterUserAccountRequest();
+
+    bool PasswordVisibility;
+    bool ShowErrors = false;
+    private string? Error;
+    private string? ErrorDetail;
+    InputType PasswordInput = InputType.Password;
+    string PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+    string repeatPassword = "";
+
+    void TogglePasswordVisibility()
+    {
+        @if (PasswordVisibility)
+        {
+            PasswordVisibility = false;
+            PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+            PasswordInput = InputType.Password;
+        }
+        else
+        {
+            PasswordVisibility = true;
+            PasswordInputIcon = Icons.Material.Filled.Visibility;
+            PasswordInput = InputType.Text;
+        }
+    }
+
+    async Task Register()
+    {
+        await form.Validate();
+        ShowErrors = false;
+        Error = "";
+        ErrorDetail = "";
+
+        if (model.Password != repeatPassword)
+        {
+            Error = "Passwords aren't same";
+            ErrorDetail = "";
+            ShowErrors = true;
+        }
+        else
+        {
+            var result = await AuthService.Register(model);
+
+            if (result)
+            {
+                Snackbar.Add("You have successfully registered. Follow the link in the email", Severity.Success);
+                NavigationManager.NavigateTo("./login");
+            }
+        }
+    }
+}

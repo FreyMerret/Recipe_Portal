@@ -104,6 +104,7 @@
         recipeListItems = await recipeService.GetRecipes(_recipeName, _categoryId, _authorNickname, _offset, _limit);
         _recipeCount = recipeListItems.Count();
         categoryListItems = await recipeService.GetCategories();
+        if(_categoryId > 0)
         _categoryName = categoryListItems.FirstOrDefault(x => x.CategoryId.Equals(_categoryId)).CategoryName;
     }
 
@@ -121,7 +122,7 @@
         }
         catch (Exception ex)
         {
-            //Snackbar.Add(ex.Message, Severity.Error);
+            Snackbar.Add(ex.Message, Severity.Error);
         }
     }
 

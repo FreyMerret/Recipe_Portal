@@ -65,7 +65,7 @@
                             <MudStack Justify=Justify.FlexEnd AlignItems=AlignItems.End Row="true">
                                 <MudPaper Elevation="0" Class="mr-2 mt-2">
                                     <MudStack Justify=Justify.FlexEnd AlignItems=AlignItems.Start Row="false">
-                                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small"></MudIconButton>
+                                        <MudIconButton OnClick="(()=>UpdateRecipe(r))" Icon="@Icons.Material.Filled.Edit" Size="Size.Small"></MudIconButton>
                                         <MudIconButton OnClick="(()=>DeleteRecipe(r))" Icon="@Icons.Material.Filled.Delete" Size="Size.Small"></MudIconButton>
                                     </MudStack>
                                 </MudPaper>
@@ -265,7 +265,24 @@
         if (!result.Cancelled)
         {
             var request = ((AddRecipeDialog)dialog.Dialog).model;
-            recipes.Add(await recipeService.AddRecipe(request));
+            recipes.Insert(0, await recipeService.AddRecipe(request));
+        }
+    }
+
+    private async Task UpdateRecipe(RecipeListItem recipe)
+    {
+        var parameters = new DialogParameters();
+        parameters.Add("RecipeId", recipe.RecipeId);
+
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Medium, FullWidth = true };
+        var dialog = dialogService.Show<UpdateRecipeDialog>("Изменение рецепта", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Cancelled)
+        {
+            var request = ((UpdateRecipeDialog)dialog.Dialog).model;
+            var responce = await recipeService.UpdateRecipe(recipe.RecipeId, request);
+            recipes[recipes.IndexOf(recipe)] = responce;
         }
     }
 

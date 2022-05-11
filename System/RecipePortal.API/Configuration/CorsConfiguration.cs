@@ -17,7 +17,7 @@ public static class CorsConfiguration
         return services;
     }
 
-    public static void UseAppCors(this WebApplication app)
+    public static void UseAppCors(this IApplicationBuilder app)
     {
         app.UseCors();
     }

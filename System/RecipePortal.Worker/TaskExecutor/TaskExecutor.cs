@@ -47,8 +47,8 @@ public class TaskExecutor : ITaskExecutor
 
     public void Start()
     {
-        rabbitMq.Subscribe<EmailModel>(RabbitMqTaskQueueNames.SEND_EMAIL, async data    //data - делегат
-            => await Execute<IEmailSender>(async service => //Func в Execute икапсулирует метод service - логирование отправки и сама отправка и лог в случае ошибки отправки
+        rabbitMq.Subscribe<EmailModel>(RabbitMqTaskQueueNames.SEND_EMAIL, async data 
+            => await Execute<IEmailSender>(async service => 
             {
                 logger.LogDebug($"{RabbitMqTaskQueueNames.SEND_EMAIL}: {data.Email} {data.Message}");
                 await service.SendEmailAsync(data);
@@ -83,7 +83,7 @@ public class TaskExecutor : ITaskExecutor
 
                 foreach (var email in mailingList)
                 {
-                    await service.SendEmailAsync(email, "New recipe in Recipe Portal", $"You can find new recipe at http://localhost:20003/recipes/{recipe.Id}");
+                    await service.SendEmailAsync(email, "Появился новый рецепт", $"По одной из Ваших подписок появился новый рецепт. Вы можете найти его по ссылке: http://localhost:20003/recipes/{recipe.Id}");
                 };
 
             }));
@@ -108,7 +108,7 @@ public class TaskExecutor : ITaskExecutor
 
                 foreach (var email in mailingList)
                 {
-                    await service.SendEmailAsync(email, "New comment added", $"You can find new comment at http://localhost:20003/recipes/{recipeId}");
+                    await service.SendEmailAsync(email, "Новый комментарий к рецепту", $"Вы можете найти новый комментарий к рецепту, на который Вы подписаны, по ссылке: http://localhost:20003/recipes/{recipeId}");
                 };
 
             }));

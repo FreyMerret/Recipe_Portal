@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using RecipePortal.API.Controllers.UserAccounts.Models;
 using RecipePortal.UserAccountService;
 using RecipePortal.UserAccountService.Models;
+using System.Text;
 
 namespace RecipePortal.API.Controllers.UserAccounts;
 
@@ -30,6 +31,7 @@ public class UserAccountsController : ControllerBase
     /// Выдача всех пользователей
     /// </summary>
     /// <returns></returns>
+    [Authorize]
     [HttpGet("")]
     public async Task<IEnumerable<UserAccountResponse>> GetUsers([FromQuery] string authorNickname = "", [FromQuery] int offset = 0, [FromQuery] int limit = 20)
     {
@@ -41,10 +43,11 @@ public class UserAccountsController : ControllerBase
     }
 
     /// <summary>
-    /// Выдача пользователя с его рецептами
+    /// Выдача пользователя
     /// </summary>
     /// <param name="authorNickname"></param>
     /// <returns></returns>
+    [Authorize]
     [HttpGet("{authorNickname}")]
     public async Task<UserAccountResponse> GetUser([FromRoute] string authorNickname)
     {
@@ -68,6 +71,14 @@ public class UserAccountsController : ControllerBase
         var response = mapper.Map<UserAccountResponse>(user);
 
         return response;
+    }
+
+    [HttpGet("confirm_email")]
+    public async Task EmailConfirmation([FromQuery] string userEmail, [FromQuery] string emailConfirmToken)
+    {
+        logger.LogDebug($"------------- EmailConfirmation ------ {userEmail} == {emailConfirmToken}");
+        emailConfirmToken = Encoding.UTF8.GetString(Convert.FromBase64String(emailConfirmToken));
+        await userAccountService.EmailConfirmation(userEmail, emailConfirmToken);
     }
 
     //[HttpPut("/change_password")]

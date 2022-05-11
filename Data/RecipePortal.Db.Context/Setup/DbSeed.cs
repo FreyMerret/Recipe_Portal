@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using RecipePortal.Db.Context.Context;
 using RecipePortal.Db.Entities;
@@ -7,7 +8,6 @@ namespace RecipePortal.Db.Context.Setup;
 
 public static class DbSeed
 {
-
 
     private static void Seed(MainDbContext context)
     {

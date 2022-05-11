@@ -13,6 +13,8 @@ using RecipePortal.RecipeService.Models;
 using RecipePortal.UserAccountService;
 using RecipePortal.UserAccountService.Models;
 using RecipePortal.API.Controllers.UserAccounts.Models;
+using System.Drawing;
+using System.Drawing.Imaging;
 
 namespace RecipePortal.API.Controllers.Recipes;
 
@@ -22,6 +24,7 @@ namespace RecipePortal.API.Controllers.Recipes;
 [Route("api/v{version:apiVersion}/recipes")]
 [ApiController]
 [ApiVersion("1.0")]
+[Authorize]
 public class RecipesController : ControllerBase
 {
     private readonly IMapper mapper;
@@ -49,8 +52,8 @@ public class RecipesController : ControllerBase
     /// <param name="offset">Количество рецептов, которое надо пропустить в выдаче</param>
     /// <param name="limit">Количество рецептов, которое надо выдать</param>
     /// <returns></returns>
-    [RequiredScope(AppScopes.RecipesRead)]
     [HttpGet]
+    [Authorize(AppScopes.RecipesRead)]
     public async Task<IEnumerable<RecipeResponse>> GetRecipes([FromQuery] string recipeName = "", [FromQuery] int categoryId = 0, [FromQuery] string authorNickname = "", [FromQuery] int offset = 0, [FromQuery] int limit = 10)
     {
         var recipes = await recipeService.GetRecipes(recipeName, categoryId, authorNickname, offset, limit);
@@ -64,7 +67,7 @@ public class RecipesController : ControllerBase
     /// </summary>
     /// <param name="recipeId">ID рецепта</param>
     /// <returns></returns>
-    [RequiredScope(AppScopes.RecipesRead)]
+    [Authorize(AppScopes.RecipesRead)]
     [HttpGet("{recipeId}")]
     public async Task<RecipeResponse> GetRecipeById([FromRoute] int recipeId)
     {
@@ -79,9 +82,8 @@ public class RecipesController : ControllerBase
     /// </summary>
     /// <param name="request">Форма добавления рецепта</param>
     /// <returns></returns>
-    [RequiredScope(AppScopes.RecipesWrite)]
+    [Authorize(AppScopes.RecipesWrite)]
     [HttpPost]
-    [Authorize]
     public async Task<RecipeResponse> AddRecipe([FromBody] AddRecipeRequest request)
     {
         var model = mapper.Map<AddRecipeModel>(request);
@@ -98,9 +100,8 @@ public class RecipesController : ControllerBase
     /// <param name="recipeId">ID рецепта, который необходимо изменить</param>
     /// <param name="request">Форма изменения рецепта</param>
     /// <returns></returns>
-    [RequiredScope(AppScopes.RecipesWrite)]
+    [Authorize(AppScopes.RecipesWrite)]
     [HttpPut("{recipeId}")]
-    [Authorize]
     public async Task<RecipeResponse> UpdateRecipe([FromRoute] int recipeId, [FromBody] UpdateRecipeRequest request)
     {
         var model = mapper.Map<UpdateRecipeModel>(request);
@@ -117,9 +118,8 @@ public class RecipesController : ControllerBase
     /// </summary>
     /// <param name="recipeId">ID рецепта, который необходимо удалить</param>
     /// <returns></returns>
-    [RequiredScope(AppScopes.RecipesWrite)]
+    [Authorize(AppScopes.RecipesWrite)]
     [HttpDelete("{recipeId}")]
-    [Authorize]
     public async Task<IActionResult> DeleteRecipe([FromRoute] int recipeId)
     {
         var requestAuthor = new Guid(HttpContext.User.Claims.FirstOrDefault(c => c.Type == "sub").Value);
@@ -141,7 +141,7 @@ public class RecipesController : ControllerBase
     /// <param name="offset">Количество комментариев, которые необходимо пропустить</param>
     /// <param name="limit">Количество комментариев, которые необходимо выдать</param>
     /// <returns></returns>
-    [RequiredScope(AppScopes.CommentsRead)]
+    [Authorize(AppScopes.CommentsRead)]
     [HttpGet("{recipeId}/comments")]
     public async Task<IEnumerable<CommentResponse>> GetComments([FromRoute] int recipeId, [FromQuery] int offset = 0, [FromQuery] int limit = 10)
     {
@@ -157,9 +157,8 @@ public class RecipesController : ControllerBase
     /// <param name="recipeId">ID рецепта, куда добавляется комментарий</param>
     /// <param name="request">Форма комментария</param>
     /// <returns></returns>
-    [RequiredScope(AppScopes.CommentsWrite)]
+    [Authorize(AppScopes.CommentsWrite)]
     [HttpPost("{recipeId}/comments")]
-    [Authorize]
     public async Task<CommentResponse> AddComment([FromRoute] int recipeId, [FromBody] AddCommentRequest request)
     {
         var model = mapper.Map<AddCommentModel>(request);
@@ -177,9 +176,8 @@ public class RecipesController : ControllerBase
     /// <param name="commentId">ID изменяемого комментария</param>
     /// <param name="request">Форма для изменения комментария</param>
     /// <returns></returns>
-    [RequiredScope(AppScopes.CommentsWrite)]
+    [Authorize(AppScopes.CommentsWrite)]
     [HttpPut("{recipeId}/comments/{commentId}")]
-    [Authorize]
     public async Task<CommentResponse> UpdateComment([FromRoute] int commentId, [FromBody] UpdateCommentRequest request)
     {
         var model = mapper.Map<UpdateCommentModel>(request);
@@ -196,9 +194,8 @@ public class RecipesController : ControllerBase
     /// </summary>
     /// <param name="commentId">ID удаляемого комментария</param>
     /// <returns></returns>
-    [RequiredScope(AppScopes.CommentsWrite)]
+    [Authorize(AppScopes.CommentsWrite)]
     [HttpDelete("{recipeId}/comments/{commentId}")]
-    [Authorize]
     public async Task<IActionResult> DeleteComment([FromRoute] int commentId)
     {
         var requestAuthor = new Guid(HttpContext.User.Claims.FirstOrDefault(c => c.Type == "sub").Value);
@@ -218,9 +215,8 @@ public class RecipesController : ControllerBase
     /// <param name="recipeId">ID рецепта</param>
     /// <param name="request">Описание добавляемого ингридиента</param>
     /// <returns></returns>
-    [RequiredScope(AppScopes.RecipesWrite)]
+    [Authorize(AppScopes.RecipesWrite)]
     [HttpPost("{recipeId}/ingredients")]
-    [Authorize]
     public async Task<CompositionFieldResponse> AddCompositionField([FromRoute]int recipeId, [FromBody] AddCompositionFieldRequest request)
     {
         var model = mapper.Map<AddCompositionFieldModel>(request);
@@ -238,9 +234,8 @@ public class RecipesController : ControllerBase
     /// <param name="compositionFieldId">ID рецепта</param>
     /// <param name="request">Описание обновляемного ингридиента</param>
     /// <returns></returns>
-    [RequiredScope(AppScopes.RecipesWrite)]
+    [Authorize(AppScopes.RecipesWrite)]
     [HttpPut("{recipeId}/ingredients/{compositionFieldId}")]
-    [Authorize]
     public async Task<CompositionFieldResponse> UpdateCompositionField([FromRoute] int compositionFieldId, [FromBody] UpdateCompositionFieldRequest request)
     {
         var model = mapper.Map<UpdateCompositionFieldModel>(request);
@@ -257,9 +252,8 @@ public class RecipesController : ControllerBase
     /// </summary>
     /// <param name="compositionFieldId">ID ингридиента</param>
     /// <returns></returns>
-    [RequiredScope(AppScopes.RecipesWrite)]
+    [Authorize(AppScopes.RecipesWrite)]
     [HttpDelete("{recipeId}/ingredients/{compositionFieldId}")]
-    [Authorize]
     public async Task<IActionResult> DeleteCompositionField([FromRoute] int compositionFieldId)
     {
         var requestAuthor = new Guid(HttpContext.User.Claims.FirstOrDefault(c => c.Type == "sub").Value);
@@ -276,7 +270,7 @@ public class RecipesController : ControllerBase
     /// Выдача списка категорий и их ID
     /// </summary>
     /// <returns></returns>
-    [RequiredScope(AppScopes.RecipesRead)]
+    [Authorize(AppScopes.RecipesRead)]
     [HttpGet("categories")]
     public async Task<IEnumerable<CategoryResponse>> GetCategories()
     {
@@ -288,7 +282,7 @@ public class RecipesController : ControllerBase
     /// Выдача списка интгридентов и их ID
     /// </summary>
     /// <returns></returns>
-    [RequiredScope(AppScopes.RecipesRead)]
+    [Authorize(AppScopes.RecipesRead)]
     [HttpGet("ingredients")]
     public async Task<IEnumerable<IngredientResponse>> GetIngredients()
     {
@@ -304,6 +298,7 @@ public class RecipesController : ControllerBase
     /// </summary>
     /// <param name="recipeId">ID рецепта</param>
     /// <returns></returns>
+    [Authorize]
     [HttpPost("{recipeId}/subscribe")]    //мы нажимаем на кнопку подписаться на странице автора
     public async Task<SubscriptionToCommentsResponse> AddSubscriptionToComments([FromRoute] int recipeId)
     {
@@ -325,8 +320,8 @@ public class RecipesController : ControllerBase
     /// </summary>
     /// <param name="subscriptionId"></param>
     /// <returns></returns>
-    [HttpDelete("unsubscribe/{subscriptionId}")]
     [Authorize]
+    [HttpDelete("unsubscribe/{subscriptionId}")]
     public async Task<IActionResult> DeleteSubscriptionToComments([FromRoute] int subscriptionId)
     {
         var model = new DeleteSubscriptionModel()
@@ -344,6 +339,7 @@ public class RecipesController : ControllerBase
     /// </summary>
     /// <param name="categoryId">ID категории</param>
     /// <returns></returns>
+    [Authorize]
     [HttpPost("categories/{categoryId}/subscribe")]    //мы нажимаем на кнопку подписаться на странице автора
     public async Task<SubscriptionToCategoryResponse> AddSubscriptionToCategory([FromRoute] int categoryId)
     {
@@ -369,8 +365,8 @@ public class RecipesController : ControllerBase
     ///     Вместо этого БД просто найдет конкретную подписку по Id и просто проверит подписчика уже в этой подписке
     ///     По факту я здесть я просто жертвую красотой URL ради производительности и вместо HttpDelete("categories/{categoryId}/subscribe") ставлю другой адрес, но
     ///     при этом БД не придется каждый раз искать подписку. Немного оптимизации, так сказать
-    [HttpDelete("categories/unsubscribe/{subscriptionId}")]
     [Authorize]
+    [HttpDelete("categories/unsubscribe/{subscriptionId}")]
     public async Task<IActionResult> DeleteSubscriptionToCategory([FromRoute] int subscriptionId)
     {
         var model = new DeleteSubscriptionModel()
@@ -382,6 +378,5 @@ public class RecipesController : ControllerBase
         await userAccountService.DeleteSubscriptionToCategory(model);
         return Ok();
     }
-
     #endregion
 }

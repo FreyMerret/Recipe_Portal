@@ -8,8 +8,10 @@ using RecipePortal.Common.Validator;
 using RecipePortal.Db.Context.Context;
 using RecipePortal.Db.Entities;
 using RecipePortal.RabbitMqService;
-using RecipePortal.RecipeService.Models;
+using RecipePortal.Settings;
 using RecipePortal.UserAccountService.Models;
+using System.Net;
+using System.Text;
 
 public class UserAccountService : IUserAccountService
 {
@@ -18,14 +20,21 @@ public class UserAccountService : IUserAccountService
     private readonly UserManager<User> userManager;
     private readonly IRabbitMqTask rabbitMqTask;
     private readonly IModelValidator<RegisterUserAccountModel> registerUserAccountModelValidator;
+    private readonly IApiSettings apiSettings;
 
-    public UserAccountService(IDbContextFactory<MainDbContext> contextFactory, IMapper mapper, UserManager<User> userManager, IRabbitMqTask rabbitMqTask, IModelValidator<RegisterUserAccountModel> registerUserAccountModelValidator)
+    public UserAccountService(IDbContextFactory<MainDbContext> contextFactory,
+                              IMapper mapper,
+                              UserManager<User> userManager,
+                              IRabbitMqTask rabbitMqTask,
+                              IModelValidator<RegisterUserAccountModel> registerUserAccountModelValidator,
+                              IApiSettings apiSettings)
     {
         this.contextFactory = contextFactory;
         this.mapper = mapper;
         this.userManager = userManager;
         this.rabbitMqTask = rabbitMqTask;
         this.registerUserAccountModelValidator = registerUserAccountModelValidator;
+        this.apiSettings = apiSettings;
     }
 
     public async Task<IEnumerable<UserAccountModel>> GetUsers(string authorNickname, int offset, int limit)
@@ -74,7 +83,7 @@ public class UserAccountService : IUserAccountService
             Surname = model.Surname,
             UserName = model.Username,  // Это логин
             Email = model.Email,
-            EmailConfirmed = true, // Так как это учебный проект, то сразу считаем, что почта подтверждена. В реальном проекте, скорее всего, надо будет ее подтвердить через ссылку в письме
+            EmailConfirmed = false,
             PhoneNumber = null,
             PhoneNumberConfirmed = false
         };
@@ -83,15 +92,22 @@ public class UserAccountService : IUserAccountService
         if (!result.Succeeded)
             throw new ProcessException($"Creating user account is wrong. {String.Join(", ", result.Errors.Select(s => s.Description))}");
 
+        var emailConfirmToken = await userManager.GenerateEmailConfirmationTokenAsync(user);
+        var convertedToken = Convert.ToBase64String(Encoding.UTF8.GetBytes(emailConfirmToken)); //переводим токен подтверждения почты в формат url
+        await rabbitMqTask.SendEmail(new EmailModel()
+        {
+            Email = model.Email,
+            Subject = "Recipe Portal",
+            Message = $"You are registered. Confirm your email: http://localhost:20003/email_confirmation?userEmail={user.Email}&emailConfirmToken={convertedToken}"
+        });
 
-        //await rabbitMqTask.SendEmail(new EmailModel()
-        //{
-        //    Email = model.Email,
-        //    Subject = "Recipe Portal",
-        //    Message = "Your account was registered successful"
-        //}); 
+        return mapper.Map<UserAccountModel>(user);        
+    }
 
-        return mapper.Map<UserAccountModel>(user);
+    public async Task EmailConfirmation(string userEmail, string emailConfirmToken)
+    {
+        var user = await userManager.FindByEmailAsync(userEmail);
+        await userManager.ConfirmEmailAsync(user, emailConfirmToken);
     }
 
     // .. Также здесь можно разместить методы для изменения данных учетной записи,
@@ -104,7 +120,8 @@ public class UserAccountService : IUserAccountService
         AddSubscriptionToAuthorModel model = new AddSubscriptionToAuthorModel()
         {
             SubscriberId = subscriber,
-            AuthorId = userManager.FindByNameAsync(authorNickname).Result.Id
+            //AuthorId = userManager.FindByNameAsync(authorNickname).Result.Id
+            AuthorId = context.Users.FirstOrDefault(x => x.UserName.Equals(authorNickname)).Id
         };
 
         var subscription = mapper.Map<SubscriptionToAuthor>(model);

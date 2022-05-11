@@ -1,0 +1,78 @@
+﻿@inherits MudComponentBase
+
+@attribute [Authorize]
+
+@using System.Text.RegularExpressions
+@using System.ComponentModel.DataAnnotations
+
+@inject IRecipeService recipeService
+
+<MudDialog>
+    <DialogContent>
+        <MudForm Model="model" @ref="form" Validation="@(ingredientValidator.ValidateValue)">
+            <MudSelect @bind-Value="_ingredientName" 
+                       For="@(() => _ingredientName)" 
+                       T="string">
+                @foreach (var ing in ingredientListItems)
+                {
+                    <MudSelectItem Value="@ing.IngredientName" />
+                }
+            </MudSelect>                                                  
+                                                    
+            <MudTextField Placeholder="Количество ингридиента" @bind-Value="model.Quantity"
+                          For="@(() => model.Quantity)"
+                          Required="true"
+                          RequiredError="Количество ингридиента обязательно к заполнению!"
+                          MaxLength="50">                                                   
+            </MudTextField>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="MudBlazor.Color.Primary" OnClick="Submit">Ok</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; } = default!;
+    [Parameter]
+    public CompositionFieldItem? Item { get; set; } = default;
+    MudForm form = default!;
+
+    CompositionFieldRequestValidator ingredientValidator = new CompositionFieldRequestValidator();
+    public CompositionFieldRequest model { get; set; } = new CompositionFieldRequest();
+
+    private List<IngredientListItem> ingredientListItems = new List<IngredientListItem>();
+    string _ingredientName;
+    bool _isNew = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        ingredientListItems = await recipeService.GetIngredients();
+        _ingredientName = ingredientListItems[0].IngredientName;
+
+        _isNew = Item == null;
+        if(!_isNew)
+        {
+            model.Quantity = Item.Quantity;
+            _ingredientName = Item.IngredientName;
+            model.IngredientId = Item.IngredientId;
+        }
+
+    }
+
+    async Task Submit()
+    {
+        model.IngredientId = ingredientListItems.FirstOrDefault(n => n.IngredientName.Equals(_ingredientName)).IngredientId;
+
+
+
+        await form.Validate();
+        if (form.IsValid)
+        {
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+    }
+    void Cancel() => MudDialog.Cancel();
+}
